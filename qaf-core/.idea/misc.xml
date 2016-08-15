@@ -58,9 +58,6 @@
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" assert-keyword="true" jdk-15="true" project-jdk-name="JDK 1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
-  <component name="SvnConfiguration">
-    <configuration>F:\Users\Luna\AppData\Roaming\Subversion</configuration>
-  </component>
   <component name="ValidationConfiguration">
     <option name="VALIDATE_ON_BUILD" value="true" />
     <option name="VALIDATORS">

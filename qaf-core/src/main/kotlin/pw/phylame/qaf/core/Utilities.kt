@@ -16,6 +16,7 @@
 
 package pw.phylame.qaf.core
 
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.reflect.KClass
@@ -26,29 +27,37 @@ fun <K, V> MutableMap<K, V>.put(entry: Map.Entry<K, V>): V? = put(entry.key, ent
 
 fun <T> T.iif(cond: Boolean, ok: () -> T): T = if (cond) ok() else this
 
-fun formatLocale(locale: Locale): String {
-    val language = locale.language
-    val country = locale.country
+fun fetchLanguages(url: URL): List<String> {
+    val tags = LinkedList<String>()
+    url.openStream().bufferedReader().forEachLine {
+        val line = it.trim()
+        if (line.isNotEmpty() && !line.startsWith('#')) {
+            tags.add(line)
+        }
+    }
+    return tags
+}
+
+fun Locale.asTag(): String {
     return if (country.isNotEmpty()) language + '-' + country else language
 }
 
-fun parseLocale(tag: String): Locale {
-    var index = tag.indexOf('-')
+fun String.toLocale(): Locale {
+    var index = indexOf('-')
     if (index == -1) {
-        index = tag.indexOf('_')
+        index = indexOf('_')
     }
     val language: String
     val country: String
     if (index == -1) {
-        language = tag
+        language = this
         country = ""
     } else {
-        language = tag.substring(0, index)
-        country = tag.substring(index + 1)
+        language = substring(0, index)
+        country = substring(index + 1)
     }
     return Locale(language, country)
 }
-
 
 interface Converter<T> {
     fun render(o: T): String = o.toString()
@@ -126,8 +135,8 @@ object ConverterManager {
         })
 
         set(object : Converter<Locale> {
-            override fun render(o: Locale): String = formatLocale(o)
-            override fun parse(s: String): Locale = parseLocale(s)
+            override fun render(o: Locale): String = o.asTag()
+            override fun parse(s: String): Locale = s.toLocale()
         })
     }
 }

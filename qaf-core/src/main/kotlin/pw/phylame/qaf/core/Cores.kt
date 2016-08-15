@@ -16,6 +16,38 @@
 
 package pw.phylame.qaf.core
 
+import java.text.MessageFormat
+import java.util.*
+
+interface Localizable {
+    fun tr(key: String, default: String = ""): String = get(key) ?: default
+
+    fun tr(key: String, vararg args: Any, default: String = ""): String = format(get(key) ?: default, args)
+
+    fun format(pattern: String, args: Array<out Any>): String = MessageFormat.format(pattern, args)
+
+    fun get(key: String): String?
+}
+
+class Assembly(
+        val name: String,
+        val version: String
+)
+
+class Translator
+private constructor(val bundle: ResourceBundle) : Localizable {
+    constructor(path: String,
+                locale: Locale = Locale.getDefault(),
+                loader: ClassLoader = Thread.currentThread().contextClassLoader) : this(ResourceBundle.getBundle(path, locale, loader))
+
+    override fun get(key: String): String? =
+            try {
+                bundle.getString(key)
+            } catch (e: MissingResourceException) {
+                null
+            }
+}
+
 interface Mappable<K, V> {
     operator fun set(key: K, value: V)
 
