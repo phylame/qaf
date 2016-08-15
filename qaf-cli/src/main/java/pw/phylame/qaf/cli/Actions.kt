@@ -2,6 +2,7 @@ package pw.phylame.qaf.cli
 
 import org.apache.commons.cli.CommandLine
 import pw.phylame.qaf.core.App
+import pw.phylame.qaf.core.Converters
 
 interface Action
 
@@ -9,13 +10,29 @@ interface Command : Action {
     fun execute(delegate: CLIDelegate): Int
 }
 
-interface Initializer<T : Any> : Action {
-    fun perform(delegate: CLIDelegate, cmd: CommandLine) {
+abstract class SubCommand(val error: String = "no input") : Command {
+    override fun execute(delegate: CLIDelegate): Int {
+        if (delegate.inputs.isEmpty()) {
+            App.error(error)
+            return -1
+        }
+        return onCommand(delegate.inputs.first(), delegate.inputs.slice(1..delegate.inputs.size - 1))
+    }
+
+    protected abstract fun onCommand(name: String, args: List<String>): Int
+}
+
+interface Initializer : Action {
+    fun perform(delegate: CLIDelegate, cmd: CommandLine)
+}
+
+interface ValueFetcher<out T : Any> : Initializer {
+    override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
         val value = parse(cmd.getOptionValue(option))
         if (value == null) {
             App.exit(-1)
         } else {
-            delegate.context[option] = value
+            delegate.context[delegate.names[option]!!] = value
         }
     }
 
@@ -24,22 +41,28 @@ interface Initializer<T : Any> : Action {
     fun parse(value: String): T? = null
 }
 
-abstract class AbstractInitializer<T : Any>(override val option: String) : Initializer<T>
-
-class BooleanFetcher(option: String) : AbstractInitializer<Boolean>(option) {
-    override fun parse(value: String): Boolean? = value.toBoolean()
+class TypedFetcher<T : Any>(override val option: String, val clazz: Class<T>) : ValueFetcher<T> {
+    override fun parse(value: String): T? {
+        return Converters.parse(value, clazz)
+    }
 }
 
-class IntegerFetcher(option: String) : AbstractInitializer<Int>(option) {
-    override fun parse(value: String): Int? = value.toInt()
-}
+inline fun <reified T : Any> fetcherOf(option: String): TypedFetcher<T> = TypedFetcher(option, T::class.java)
 
-class DoubleFetcher(option: String) : AbstractInitializer<Double>(option) {
-    override fun parse(value: String): Double? = value.toDouble()
-}
-
-class ListFetcher(override val option: String) : Initializer<Array<String>> {
+class ListFetcher(val option: String) : Initializer {
     override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
-        delegate.context[option] = cmd.getOptionValues(option)
+        delegate.context[delegate.names[option]!!] = cmd.getOptionValues(option)
+    }
+}
+
+class PropertiesFetcher(val option: String) : Initializer {
+    override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
+        delegate.context[delegate.names[option]!!] = cmd.getOptionProperties(option)
+    }
+}
+
+class Switcher(val option: String) : Initializer {
+    override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
+        delegate.context[delegate.names[option]!!] = true
     }
 }

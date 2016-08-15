@@ -108,6 +108,14 @@ object App : Localizable {
 
     fun pathInHome(name: String): String = home + File.pathSeparatorChar + name
 
+    fun echo(text: String) {
+        System.out.println("${assembly.name}: $text")
+    }
+
+    fun error(text: String) {
+        System.err.println("${assembly.name}: $text")
+    }
+
     fun run(name: String, version: String, arguments: Array<String>, delegate: AppDelegate) {
         this.assembly = Assembly(name, version)
         this.arguments = arguments
@@ -133,13 +141,3 @@ object App : Localizable {
 fun tr(key: String, default: String = ""): String = App.tr(key, default)
 
 fun tr(key: String, vararg args: Any, default: String = ""): String = App.tr(key, *args, default)
-
-object Qaf {
-    fun pathInHome(base: String): String {
-        return base
-    }
-
-    fun registerExitHook(task: Runnable) {
-
-    }
-}

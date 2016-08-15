@@ -65,7 +65,7 @@ interface Converter<T> {
     fun parse(s: String): T
 }
 
-object ConverterManager {
+object Converters {
     private val converters = HashMap<Class<*>, Converter<*>>()
 
     inline fun <reified T : Any> set(converter: Converter<T>): Converter<T>? =
@@ -142,7 +142,7 @@ object ConverterManager {
 }
 
 fun main(args: Array<String>) {
-    println(ConverterManager.render(Date()))
-    println(ConverterManager.parse<Locale>("en-US"))
-    println(ConverterManager.parse<Int>("124"))
+    println(Converters.render(Date()))
+    println(Converters.parse<Locale>("en-US"))
+    println(Converters.parse<Int>("124"))
 }

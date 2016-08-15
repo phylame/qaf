@@ -119,7 +119,7 @@ class Settings(name: String, loading: Boolean = true, autoSync: Boolean) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> get(name: String, default: T, clazz: Class<T>): T = settings[name]?.let {
-        ConverterManager.parse(it, clazz)
+        Converters.parse(it, clazz)
     } ?: default
 
     operator inline fun <reified T : Any> set(name: String, value: T) {
@@ -127,7 +127,7 @@ class Settings(name: String, loading: Boolean = true, autoSync: Boolean) {
     }
 
     fun <T : Any> set(name: String, value: T, clazz: Class<T>) {
-        settings[name] = ConverterManager.render(value, clazz)!!
+        settings[name] = Converters.render(value, clazz)!!
         modified = true
     }
 
