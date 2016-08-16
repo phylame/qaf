@@ -1,2 +1,2 @@
 # qaf
-Fast Java application framework in Kotlin
+Fast application framework in Kotlin
