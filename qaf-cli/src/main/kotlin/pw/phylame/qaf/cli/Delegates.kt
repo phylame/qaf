@@ -5,9 +5,12 @@ import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.AppDelegate
 import java.util.*
 
-open class CLIDelegate(val defaultCommand: Command? = null,
-                       val parser: CommandLineParser = DefaultParser()) : AppDelegate {
+open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDelegate {
     val context = HashMap<String, Any>()
+
+    val options = Options()
+
+    var defaultCommand: Command? = null
 
     lateinit var inputs: Array<String>
         private set
@@ -71,12 +74,12 @@ open class CLIDelegate(val defaultCommand: Command? = null,
                 status = Math.min(status, it.execute(this))
             }
         } else if (defaultCommand != null) {
-            status = defaultCommand.execute(this)
+            status = defaultCommand!!.execute(this)
         }
         return status
     }
 
-    override fun run() {
+    override final fun run() {
         parseOptions()
         if (!onOptionParsed()) {
             App.exit(-1)
@@ -89,6 +92,4 @@ open class CLIDelegate(val defaultCommand: Command? = null,
     internal val names = HashMap<String, String>()
 
     private val commands = LinkedList<Command>()
-
-    private val options = Options()
 }

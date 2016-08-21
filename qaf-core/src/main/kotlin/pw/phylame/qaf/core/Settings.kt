@@ -16,11 +16,13 @@
 
 package pw.phylame.qaf.core
 
+import pw.phylame.ycl.format.Converters
 import java.io.*
 import java.nio.charset.Charset
 import java.util.*
+import kotlin.reflect.KProperty
 
-class Settings(name: String, loading: Boolean = true, autoSync: Boolean) {
+open class Settings(name: String = "settings", loading: Boolean = true, autoSync: Boolean = true) {
     companion object {
         val ENCODING = "UTF-8"
 
@@ -48,19 +50,15 @@ class Settings(name: String, loading: Boolean = true, autoSync: Boolean) {
             if (!file.exists()) {
                 reset()
             } else {
-                FileInputStream(file).use {
-                    load(it)
-                }
+                FileInputStream(file).use { load(it) }
             }
         }
         if (autoSync) {
-            App.addCleanup(Runnable {
-                sync(false)
-            })
+            App.addCleanup(Runnable { sync(false) })
         }
     }
 
-    fun reset() {
+    open fun reset() {
         modified = true
     }
 
@@ -70,14 +68,12 @@ class Settings(name: String, loading: Boolean = true, autoSync: Boolean) {
             if (!dir.exists() && !dir.mkdir()) {
                 throw IOException("Cannot create settings home: ${dir.absolutePath}")
             }
-            FileOutputStream(path).use {
-                store(it)
-            }
+            FileOutputStream(path).use { store(it) }
             modified = false
         }
     }
 
-    private fun load(input: InputStream) {
+    protected open fun load(input: InputStream) {
         input.bufferedReader(Charset.forName(ENCODING)).forEachLine {
             val line = it.trim()
             if (line.isNotEmpty() && !line.startsWith(COMMENT_LABEL)) {
@@ -89,10 +85,10 @@ class Settings(name: String, loading: Boolean = true, autoSync: Boolean) {
         }
     }
 
-    private fun store(output: OutputStream) {
+    protected open fun store(output: OutputStream) {
         output.bufferedWriter(Charset.forName(ENCODING)).apply {
             if (comment.isNotBlank()) {
-                append(comment.lineSequence().joinToString(LINE_SEPARATOR, COMMENT_LABEL + ' '))
+                append(comment.lineSequence().joinToString(LINE_SEPARATOR) { COMMENT_LABEL + ' ' + it }).append(LINE_SEPARATOR)
                 append(COMMENT_LABEL).append(" Encoding: ").append(ENCODING).append(LINE_SEPARATOR)
                 append(LINE_SEPARATOR)
             }
@@ -113,7 +109,7 @@ class Settings(name: String, loading: Boolean = true, autoSync: Boolean) {
 
     operator fun contains(name: String): Boolean = name in settings
 
-    operator fun get(name: String): Any? = settings[name]
+    operator fun get(name: String): String? = settings[name]
 
     inline fun <reified T : Any> get(name: String, default: T): T = get(name, default, T::class.java)
 
@@ -122,7 +118,7 @@ class Settings(name: String, loading: Boolean = true, autoSync: Boolean) {
         Converters.parse(it, clazz)
     } ?: default
 
-    operator inline fun <reified T : Any> set(name: String, value: T) {
+    inline operator fun <reified T : Any> set(name: String, value: T) {
         set(name, value, T::class.java)
     }
 
@@ -148,5 +144,17 @@ class Settings(name: String, loading: Boolean = true, autoSync: Boolean) {
     fun clear() {
         settings.clear()
         modified = true
+    }
+
+    inline fun <reified T : Any> delegated(default: T, name: String? = null): Delegate<T> =
+            Delegate(default, T::class.java, name)
+
+    inner class Delegate<T : Any>(val default: T, val clazz: Class<T>, val name: String? = null) {
+        operator fun getValue(ref: Any?, property: KProperty<*>): T =
+                get(name ?: property.name, default, clazz)
+
+        operator fun setValue(ref: Any?, property: KProperty<*>, value: T) {
+            set(name ?: property.name, value, clazz)
+        }
     }
 }

@@ -20,18 +20,18 @@ import java.text.MessageFormat
 import java.util.*
 
 interface Localizable {
-    fun tr(key: String, default: String = ""): String = get(key) ?: default
+    fun get(key: String): String
 
-    fun tr(key: String, vararg args: Any, default: String = ""): String = format(get(key) ?: default, args)
+    fun tr(key: String): String = get(key)
 
-    fun format(pattern: String, args: Array<out Any>): String = MessageFormat.format(pattern, args)
+    fun tr(key: String, vararg args: Any): String = format(get(key), args)
 
-    fun get(key: String): String?
+    fun format(pattern: String, args: Array<out Any>): String = MessageFormat.format(pattern, *args)
 }
 
 class Assembly(
-        val name: String,
-        val version: String
+        val name: String = "",
+        val version: String = ""
 )
 
 class Translator
@@ -40,12 +40,8 @@ private constructor(val bundle: ResourceBundle) : Localizable {
                 locale: Locale = Locale.getDefault(),
                 loader: ClassLoader = Thread.currentThread().contextClassLoader) : this(ResourceBundle.getBundle(path, locale, loader))
 
-    override fun get(key: String): String? =
-            try {
-                bundle.getString(key)
-            } catch (e: MissingResourceException) {
-                null
-            }
+    override fun get(key: String): String = bundle.getString(key)
+
 }
 
 interface Mappable<K, V> {

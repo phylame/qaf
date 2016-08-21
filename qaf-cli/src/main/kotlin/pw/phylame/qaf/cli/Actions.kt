@@ -2,7 +2,7 @@ package pw.phylame.qaf.cli
 
 import org.apache.commons.cli.CommandLine
 import pw.phylame.qaf.core.App
-import pw.phylame.qaf.core.Converters
+import pw.phylame.ycl.format.Converters
 
 interface Action
 
@@ -26,22 +26,30 @@ interface Initializer : Action {
     fun perform(delegate: CLIDelegate, cmd: CommandLine)
 }
 
-interface ValueFetcher<out T : Any> : Initializer {
+interface ValueFetcher<T : Any> : Initializer {
     override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
         val value = parse(cmd.getOptionValue(option))
         if (value == null) {
             App.exit(-1)
         } else {
-            delegate.context[delegate.names[option]!!] = value
+            if (validator?.invoke(value) ?: true) {
+                delegate.context[delegate.names[option]!!] = value
+            } else {
+                App.exit(-1)
+            }
         }
     }
 
     val option: String
 
+    val validator: ((T) -> Boolean)?
+
     fun parse(value: String): T? = null
 }
 
-class TypedFetcher<T : Any>(override val option: String, val clazz: Class<T>) : ValueFetcher<T> {
+open class TypedFetcher<T : Any>(override val option: String,
+                                 val clazz: Class<T>,
+                                 override val validator: ((T) -> Boolean)? = null) : ValueFetcher<T> {
     override fun parse(value: String): T? {
         return Converters.parse(value, clazz)
     }
@@ -49,19 +57,22 @@ class TypedFetcher<T : Any>(override val option: String, val clazz: Class<T>) : 
 
 inline fun <reified T : Any> fetcherOf(option: String): TypedFetcher<T> = TypedFetcher(option, T::class.java)
 
-class ListFetcher(val option: String) : Initializer {
+fun <T : Any> fetcherOf(option: String, clazz: Class<T>, validator: ((T) -> Boolean)? = null): TypedFetcher<T> =
+        TypedFetcher(option, clazz, validator)
+
+open class ListFetcher(val option: String) : Initializer {
     override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
         delegate.context[delegate.names[option]!!] = cmd.getOptionValues(option)
     }
 }
 
-class PropertiesFetcher(val option: String) : Initializer {
+open class PropertiesFetcher(val option: String) : Initializer {
     override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
         delegate.context[delegate.names[option]!!] = cmd.getOptionProperties(option)
     }
 }
 
-class Switcher(val option: String) : Initializer {
+open class Switcher(val option: String) : Initializer {
     override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
         delegate.context[delegate.names[option]!!] = true
     }

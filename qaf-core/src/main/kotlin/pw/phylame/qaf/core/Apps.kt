@@ -53,7 +53,7 @@ object App : Localizable {
         System.getProperty(PLUGIN_CONFIG_KEY) ?: "META-INF/qaf/plugin.prop"
     }
 
-    lateinit var assembly: Assembly
+    var assembly: Assembly = Assembly()
         private set
 
     lateinit var delegate: AppDelegate
@@ -70,6 +70,13 @@ object App : Localizable {
 
     val home: String by lazy {
         System.getProperty(CUSTOMIZED_HOME_KEY) ?: System.getProperty("user.home") + File.separatorChar + '.' + assembly.name
+    }
+
+    fun ensureHomeExisted() {
+        val homeDir = File(home)
+        if (!homeDir.exists() && !homeDir.mkdir()) {
+            throw RuntimeException("Cannot create home directory: " + home)
+        }
     }
 
     fun addCleanup(cleanup: Runnable) {
@@ -106,14 +113,51 @@ object App : Localizable {
         }
     }
 
-    fun pathInHome(name: String): String = home + File.pathSeparatorChar + name
+    fun pathInHome(name: String): String = home + File.separatorChar + name
 
-    fun echo(text: String) {
-        System.out.println("${assembly.name}: $text")
+    fun echo(msg: Any) {
+        System.out.println("${assembly.name}: $msg")
     }
 
-    fun error(text: String) {
-        System.err.println("${assembly.name}: $text")
+    enum class Debug {
+        NONE, ECHO, TRACE
+    }
+
+    var debug = Debug.ECHO
+
+    private fun traceback(e: Exception, debug: Debug) {
+        when (debug) {
+            Debug.ECHO -> println(e.message)
+            Debug.TRACE -> e.printStackTrace()
+        }
+    }
+
+    fun error(msg: Any) {
+        System.err.println("${assembly.name}: $msg")
+    }
+
+    fun error(msg: Any, e: Exception) {
+        error(msg, e, debug)
+    }
+
+    fun error(msg: Any, e: Exception, debug: Debug) {
+        error(msg)
+        traceback(e, debug)
+    }
+
+    fun die(msg: Any): Nothing {
+        error(msg)
+        exit(-1)
+    }
+
+    fun die(msg: Any, e: Exception): Nothing {
+        die(msg, e, debug)
+    }
+
+    fun die(msg: Any, e: Exception, debug: Debug): Nothing {
+        error(msg)
+        traceback(e, debug)
+        exit(-1)
     }
 
     fun run(name: String, version: String, arguments: Array<String>, delegate: AppDelegate) {
@@ -123,11 +167,13 @@ object App : Localizable {
         start()
     }
 
-    fun exit(status: Int = 0) {
+    fun exit(status: Int = 0): Nothing {
         _plugins.forEach { it.destroy() }
         _cleanups.forEach { it.run() }
         delegate.onQuit()
         System.exit(status)
+        // that will never be executed
+        throw RuntimeException()
     }
 
     private fun start() {
@@ -135,9 +181,9 @@ object App : Localizable {
         delegate.run()
     }
 
-    override fun get(key: String): String? = translator?.get(key) ?: null
+    override fun get(key: String): String = translator?.get(key) ?: throw IllegalStateException("No translator specified")
 }
 
-fun tr(key: String, default: String = ""): String = App.tr(key, default)
+fun tr(key: String): String = App.tr(key)
 
-fun tr(key: String, vararg args: Any, default: String = ""): String = App.tr(key, *args, default)
+fun tr(key: String, vararg args: Any): String = App.tr(key, *args)
