@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Peng Wan <phylame@163.com>
+ * Copyright 2016 Peng Wan <phylame@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,8 @@ class Translator
 private constructor(val bundle: ResourceBundle) : Localizable {
     constructor(path: String,
                 locale: Locale = Locale.getDefault(),
-                loader: ClassLoader = Thread.currentThread().contextClassLoader) : this(ResourceBundle.getBundle(path, locale, loader))
+                loader: ClassLoader = Thread.currentThread().contextClassLoader) :
+    this(ResourceBundle.getBundle(path, locale, loader))
 
     override fun get(key: String): String = bundle.getString(key)
 

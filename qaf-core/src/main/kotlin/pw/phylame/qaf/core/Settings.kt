@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Peng Wan <phylame@163.com>
+ * Copyright 2016 Peng Wan <phylame@163.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,9 +99,9 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
         }
     }
 
-    val size: Int = settings.size
+    val size: Int get() = settings.size
 
-    val names: Set<String> = settings.keys
+    val names: Set<String> get() = settings.keys
 
     fun forEach(action: (Map.Entry<String, String>) -> Unit) {
         settings.forEach(action)
@@ -128,10 +128,14 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
     }
 
     fun update(rhs: Settings, clearing: Boolean = false) {
+        update(rhs.settings, clearing)
+    }
+
+    fun update(map: Map<String, String>, clearing: Boolean = false) {
         if (clearing) {
-            settings.clear()
+            settings.clone()
         }
-        settings.putAll(rhs.settings)
+        settings.putAll(map)
         modified = true
     }
 
@@ -150,8 +154,7 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
             Delegate(default, T::class.java, name)
 
     inner class Delegate<T : Any>(val default: T, val clazz: Class<T>, val name: String? = null) {
-        operator fun getValue(ref: Any?, property: KProperty<*>): T =
-                get(name ?: property.name, default, clazz)
+        operator fun getValue(ref: Any?, property: KProperty<*>): T = get(name ?: property.name, default, clazz)
 
         operator fun setValue(ref: Any?, property: KProperty<*>, value: T) {
             set(name ?: property.name, value, clazz)
