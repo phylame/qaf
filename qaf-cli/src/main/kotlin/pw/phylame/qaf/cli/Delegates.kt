@@ -3,6 +3,8 @@ package pw.phylame.qaf.cli
 import org.apache.commons.cli.*
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.AppDelegate
+import pw.phylame.qaf.core.MapDelegate
+import pw.phylame.qaf.core.mapped
 import java.util.*
 
 open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDelegate {
@@ -14,6 +16,8 @@ open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDel
 
     lateinit var inputs: Array<String>
         private set
+
+    fun <T> managed(fallback: () -> T): MapDelegate<T> = mapped(context, fallback)
 
     protected open fun createOptions() {
     }

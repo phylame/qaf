@@ -18,12 +18,20 @@ package pw.phylame.qaf.core
 
 import java.net.URL
 import java.util.*
+import kotlin.reflect.KProperty
 
 fun <K, V> MutableMap<K, V>.put(pair: Pair<K, V>): V? = put(pair.first, pair.second)
 
 fun <K, V> MutableMap<K, V>.put(entry: Map.Entry<K, V>): V? = put(entry.key, entry.value)
 
-fun <T> T.iif(cond: Boolean, ok: () -> T): T = if (cond) ok() else this
+fun <T> T.iif(cond: Boolean, ok: (T) -> T): T = if (cond) ok(this) else this
+
+class MapDelegate<out T>(val m: Map<String, *>, val fallback: () -> T) {
+    @Suppress("unchecked_cast")
+    operator fun getValue(ref: kotlin.Any?, property: KProperty<*>): T = m[property.name] as? T ?: fallback()
+}
+
+fun <T> mapped(m: Map<String, Any>, fallback: () -> T): MapDelegate<T> = MapDelegate(m, fallback)
 
 fun fetchLanguages(url: URL): List<String> {
     val tags = LinkedList<String>()
