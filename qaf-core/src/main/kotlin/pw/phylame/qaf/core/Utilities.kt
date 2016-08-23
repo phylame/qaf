@@ -26,12 +26,12 @@ fun <K, V> MutableMap<K, V>.put(entry: Map.Entry<K, V>): V? = put(entry.key, ent
 
 fun <T> T.iif(cond: Boolean, ok: (T) -> T): T = if (cond) ok(this) else this
 
-class MapDelegate<out T>(val m: Map<String, *>, val fallback: () -> T) {
+class Delegate<out T>(val m: Map<String, *>, val fallback: () -> T) {
     @Suppress("unchecked_cast")
     operator fun getValue(ref: kotlin.Any?, property: KProperty<*>): T = m[property.name] as? T ?: fallback()
 }
 
-fun <T> mapped(m: Map<String, Any>, fallback: () -> T): MapDelegate<T> = MapDelegate(m, fallback)
+fun <T> valueOf(m: Map<String, Any>, fallback: () -> T): Delegate<T> = Delegate(m, fallback)
 
 fun fetchLanguages(url: URL): List<String> {
     val tags = LinkedList<String>()

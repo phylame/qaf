@@ -16,6 +16,7 @@
 
 package pw.phylame.qaf.core
 
+import pw.phylame.ycl.util.Log
 import java.io.File
 import java.io.InputStream
 import java.util.*
@@ -24,19 +25,33 @@ const val PLUGIN_CONFIG_KEY = "qaf.config.path"
 
 const val CUSTOMIZED_HOME_KEY = "qaf.home"
 
+/**
+ * The delegate for app workflow, when creating the delegate instance, the methods of App is inaccessible.
+ */
 interface AppDelegate : Runnable {
+    /**
+     * Does initialing tasks for the app.
+     */
     fun onStart() {
 
     }
 
+    /**
+     * Filters the specified plugin.
+     */
     fun onPlugin(plugin: Plugin): Boolean = true
 
+    /**
+     * Does tasks when quitting app.
+     */
     fun onQuit() {
 
     }
 }
 
 interface Plugin {
+    val id: String
+
     val meta: Map<String, Any>
 
     fun init()
@@ -45,15 +60,17 @@ interface Plugin {
 }
 
 object App : Localizable {
-    private val _plugins = LinkedList<Plugin>()
-
-    private val _cleanups = LinkedList<Runnable>()
+    const val TAG = "APP"
 
     private val pluginPath by lazy {
         System.getProperty(PLUGIN_CONFIG_KEY) ?: "META-INF/qaf/plugin.prop"
     }
 
-    var assembly: Assembly = Assembly()
+    val plugins: MutableList<Plugin> = LinkedList()
+
+    val cleanups: MutableSet<Runnable> = LinkedHashSet()
+
+    lateinit var assembly: Assembly
         private set
 
     lateinit var delegate: AppDelegate
@@ -64,29 +81,15 @@ object App : Localizable {
 
     var translator: Localizable? = null
 
-    val plugins: List<Plugin> = _plugins
-
-    val cleanups: List<Runnable> = _cleanups
-
     val home: String by lazy {
-        System.getProperty(CUSTOMIZED_HOME_KEY) ?: System.getProperty("user.home") + File.separatorChar + '.' + assembly.name
+        (System.getProperty(CUSTOMIZED_HOME_KEY) ?: System.getProperty("user.home")) + File.separatorChar + '.' + assembly.name
     }
 
     fun ensureHomeExisted() {
-        val homeDir = File(home)
-        if (!homeDir.exists() && !homeDir.mkdir()) {
-            throw RuntimeException("Cannot create home directory: " + home)
+        val dir = File(home)
+        if (!dir.exists() && !dir.mkdir()) {
+            throw RuntimeException("Cannot create home directory: $home")
         }
-    }
-
-    fun addCleanup(cleanup: Runnable) {
-        if (cleanup !in _cleanups) {
-            _cleanups.add(cleanup)
-        }
-    }
-
-    fun removeCleanup(cleanup: Runnable) {
-        _cleanups.remove(cleanup)
     }
 
     fun loadPlugins(loader: ClassLoader = Thread.currentThread().contextClassLoader) {
@@ -105,11 +108,12 @@ object App : Localizable {
                     val plugin = clazz.newInstance() as Plugin
                     if (delegate.onPlugin(plugin)) {
                         plugin.init()
-                        _plugins.add(plugin)
+                        plugins.add(plugin)
                     }
                 }
             }
         } catch (e: ClassNotFoundException) {
+            Log.e(TAG, e)
         }
     }
 
@@ -129,6 +133,8 @@ object App : Localizable {
         when (debug) {
             Debug.ECHO -> println(e.message)
             Debug.TRACE -> e.printStackTrace()
+            else -> {
+            }
         }
     }
 
@@ -168,8 +174,8 @@ object App : Localizable {
     }
 
     fun exit(status: Int = 0): Nothing {
-        _plugins.forEach { it.destroy() }
-        _cleanups.forEach { it.run() }
+        plugins.forEach { it.destroy() }
+        cleanups.forEach { it.run() }
         delegate.onQuit()
         System.exit(status)
         // that will never be executed
@@ -179,6 +185,8 @@ object App : Localizable {
     private fun start() {
         delegate.onStart()
         delegate.run()
+        // if delegate invoked exit, the next will be ignored
+        exit(0)
     }
 
     override fun get(key: String): String = translator?.get(key) ?: throw IllegalStateException("No translator specified")

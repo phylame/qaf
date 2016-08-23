@@ -47,28 +47,33 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
     init {
         if (loading) {
             val file = File(path)
-            if (!file.exists()) {
-                reset()
-            } else {
+            if (file.exists()) {
                 FileInputStream(file).use { load(it) }
             }
         }
         if (autoSync) {
-            App.addCleanup(Runnable { sync(false) })
+            App.cleanups.add(Runnable { sync(false) })
         }
     }
 
+    /**
+     * The sub implementation cannot use its var and val for super init is not completed.
+     */
     open fun reset() {
         modified = true
     }
 
     fun sync(forcing: Boolean = false) {
+        val file = File(path)
+        if (!file.exists()) {
+            reset() // reset for default values
+        }
         if (modified || forcing) {
-            val dir = File(path).parentFile
+            val dir = file.parentFile
             if (!dir.exists() && !dir.mkdir()) {
                 throw IOException("Cannot create settings home: ${dir.absolutePath}")
             }
-            FileOutputStream(path).use { store(it) }
+            FileOutputStream(file).use { store(it) }
             modified = false
         }
     }
@@ -154,7 +159,10 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
             Delegate(default, T::class.java, name)
 
     inner class Delegate<T : Any>(val default: T, val clazz: Class<T>, val name: String? = null) {
-        operator fun getValue(ref: Any?, property: KProperty<*>): T = get(name ?: property.name, default, clazz)
+
+        operator fun getValue(ref: Any?, property: KProperty<*>): T {
+            return get(name ?: property.name, default, clazz)
+        }
 
         operator fun setValue(ref: Any?, property: KProperty<*>, value: T) {
             set(name ?: property.name, value, clazz)

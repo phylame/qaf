@@ -29,7 +29,7 @@ interface Localizable {
     fun format(pattern: String, args: Array<out Any>): String = MessageFormat.format(pattern, *args)
 }
 
-class Assembly(
+data class Assembly(
         val name: String = "",
         val version: String = ""
 )
