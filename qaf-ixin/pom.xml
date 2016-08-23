@@ -11,19 +11,15 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>qaf-cli</artifactId>
-    <name>Qaf CLI</name>
-    <description>Qaf console application framework</description>
+    <artifactId>qaf-ixin</artifactId>
+    <name>Qaf IxIn</name>
+    <description>Fast GUI framework on Swing</description>
 
     <dependencies>
         <dependency>
             <groupId>pw.phylame.qaf</groupId>
             <artifactId>qaf-core</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-cli</groupId>
-            <artifactId>commons-cli</artifactId>
         </dependency>
     </dependencies>
 
