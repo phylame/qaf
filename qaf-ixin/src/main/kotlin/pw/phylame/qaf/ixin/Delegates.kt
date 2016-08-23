@@ -21,6 +21,10 @@ import pw.phylame.qaf.core.Plugin
 import javax.swing.SwingUtilities
 
 abstract class IxinDelegate<F : Form> : AppDelegate {
+    companion object {
+
+    }
+
     override fun onStart() {
         super.onStart()
     }
@@ -38,7 +42,7 @@ abstract class IxinDelegate<F : Form> : AppDelegate {
     }
 
     override fun onQuit() {
-        super.onQuit()
+        form.destroy()
     }
 
     lateinit var form: F

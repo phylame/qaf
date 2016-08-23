@@ -16,6 +16,45 @@
 
 package pw.phylame.qaf.ixin
 
+import pw.phylame.qaf.core.Settings
+import java.awt.Dimension
+import java.util.*
+import javax.swing.Action
 import javax.swing.JFrame
+import javax.swing.JToolBar
 
-open class Form : JFrame()
+open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) {
+    private fun createMenuBar() {
+    }
+
+    private fun createToolBar() {
+    }
+
+    private fun createStatusBar() {
+    }
+
+    fun restore() {
+    }
+
+    fun destroy() {
+    }
+
+    val menuActions = HashMap<String, Action>()
+
+    var toolbar: JToolBar? = null
+
+    companion object {
+        const val FORM_LOCATION = "form.location"
+        const val FORM_SIZE = "form.size"
+        const val TOOL_BAR_VISIBLE = "form.toolbar.visible"
+        const val TOOL_BAR_LOCKED = "form.toolbar.locked"
+        const val STATUS_BAR_VISIBLE = "form.statusbar.visible"
+
+        const val IXIN_FORM_SIZE = "ixin.form.size"
+
+        val defaultSize by lazy {
+            Dimension(780, 439)
+        }
+
+    }
+}
