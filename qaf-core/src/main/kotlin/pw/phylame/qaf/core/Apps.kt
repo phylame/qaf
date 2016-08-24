@@ -16,7 +16,7 @@
 
 package pw.phylame.qaf.core
 
-import pw.phylame.ycl.util.Log
+import pw.phylame.ycl.log.Log
 import java.io.File
 import java.io.InputStream
 import java.util.*
