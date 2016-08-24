@@ -102,8 +102,12 @@ object App : Localizable {
 
     fun loadPlugin(input: InputStream) {
         try {
-            input.bufferedReader().forEachLine {
-                val clazz = Class.forName(it.trim())
+            for (line in input.bufferedReader().lineSequence()) {
+                val path = line.trim()
+                if (path.isBlank() || path.startsWith('#')) {
+                    continue
+                }
+                val clazz = Class.forName(path)
                 if (Plugin::class.java.isAssignableFrom(clazz)) {
                     val plugin = clazz.newInstance() as Plugin
                     if (delegate.onPlugin(plugin)) {
