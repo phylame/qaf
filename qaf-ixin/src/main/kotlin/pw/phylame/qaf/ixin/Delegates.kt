@@ -18,18 +18,38 @@ package pw.phylame.qaf.ixin
 
 import pw.phylame.qaf.core.AppDelegate
 import pw.phylame.qaf.core.Plugin
+import java.util.*
 import javax.swing.SwingUtilities
 
-abstract class IxinDelegate<F : Form> : AppDelegate {
-    companion object {
+interface IPlugin : Plugin {
+    /**
+     * Executed after initializing UI components.
+     */
+    fun performUI()
+}
 
-    }
+abstract class IxinDelegate<F : Form> : AppDelegate, CommandListener {
 
-    override fun onStart() {
-        super.onStart()
+    lateinit var resource: Resource
+        protected set
+
+    lateinit var proxy: CommandListener
+        protected set
+
+    lateinit var form: F
+        private set
+
+    abstract fun createForm(): F
+
+    override fun commandPerformed(command: String) {
+        // forward to proxy
+        proxy.commandPerformed(command)
     }
 
     override fun onPlugin(plugin: Plugin): Boolean {
+        if (plugin is IPlugin) {
+            plugins.add(plugin)
+        }
         return super.onPlugin(plugin)
     }
 
@@ -39,14 +59,13 @@ abstract class IxinDelegate<F : Form> : AppDelegate {
 
     private fun initUI() {
         form = createForm()
+        plugins.forEach { it.performUI() }
     }
 
     override fun onQuit() {
         form.destroy()
+        super.onQuit()
     }
 
-    lateinit var form: F
-        private set
-
-    abstract fun createForm(): F
+    private val plugins = LinkedHashSet<IPlugin>()
 }

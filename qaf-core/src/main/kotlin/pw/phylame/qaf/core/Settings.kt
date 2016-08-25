@@ -116,12 +116,12 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
 
     operator fun contains(name: String): Boolean = name in settings
 
-    operator fun get(name: String): String? = settings[name]
+    fun rawFor(name: String): String? = settings[name]
 
-    inline fun <reified T : Any> get(name: String, default: T): T = get(name, default, T::class.java)
+    inline operator fun <reified T : Any> get(name: String): T? = get(name, null as T?, T::class.java)
 
-    @Suppress("UNCHECKED_CAST")
-    fun <T : Any> get(name: String, default: T, clazz: Class<T>): T = settings[name]?.let {
+    @Suppress("unchecked_cast")
+    fun <T : Any> get(name: String, default: T?, clazz: Class<T>): T? = settings[name]?.let {
         Converters.parse(it, clazz)
     } ?: default
 
@@ -162,9 +162,7 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
 
     inner class Delegate<T : Any>(val default: T, val clazz: Class<T>, val name: String? = null) {
 
-        operator fun getValue(ref: Any?, property: KProperty<*>): T {
-            return get(name ?: property.name, default, clazz)
-        }
+        operator fun getValue(ref: Any?, property: KProperty<*>): T = get(name ?: property.name, default, clazz)!!
 
         operator fun setValue(ref: Any?, property: KProperty<*>, value: T) {
             set(name ?: property.name, value, clazz)

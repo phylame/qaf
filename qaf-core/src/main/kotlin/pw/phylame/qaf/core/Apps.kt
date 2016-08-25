@@ -66,7 +66,7 @@ object App : Localizable {
         System.getProperty(PLUGIN_CONFIG_KEY) ?: "META-INF/qaf/plugin.prop"
     }
 
-    val plugins: MutableList<Plugin> = LinkedList()
+    val plugins: MutableMap<String, Plugin> = LinkedHashMap()
 
     val cleanups: MutableSet<Runnable> = LinkedHashSet()
 
@@ -79,7 +79,7 @@ object App : Localizable {
     lateinit var arguments: Array<String>
         private set
 
-    var translator: Localizable? = null
+    lateinit var translator: Localizable
 
     val home: String by lazy {
         (System.getProperty(CUSTOMIZED_HOME_KEY) ?: System.getProperty("user.home")) + File.separatorChar + '.' + assembly.name
@@ -112,7 +112,7 @@ object App : Localizable {
                     val plugin = clazz.newInstance() as Plugin
                     if (delegate.onPlugin(plugin)) {
                         plugin.init()
-                        plugins.add(plugin)
+                        plugins[plugin.id] = plugin
                     }
                 }
             }
@@ -178,7 +178,7 @@ object App : Localizable {
     }
 
     fun exit(status: Int = 0): Nothing {
-        plugins.forEach { it.destroy() }
+        plugins.forEach { it.value.destroy() }
         cleanups.forEach { it.run() }
         delegate.onQuit()
         System.exit(status)
@@ -193,7 +193,7 @@ object App : Localizable {
         exit(0)
     }
 
-    override fun get(key: String): String = translator?.get(key) ?: throw IllegalStateException("No translator specified")
+    override fun get(key: String): String = translator.get(key)
 }
 
 fun tr(key: String): String = App.tr(key)
