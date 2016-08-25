@@ -17,6 +17,7 @@
 package pw.phylame.qaf.core
 
 import pw.phylame.ycl.format.Converters
+import pw.phylame.ycl.util.DateUtils
 import java.io.*
 import java.nio.charset.Charset
 import java.util.*
@@ -94,9 +95,10 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
         output.bufferedWriter(Charset.forName(ENCODING)).apply {
             if (comment.isNotBlank()) {
                 append(comment.lineSequence().joinToString(LINE_SEPARATOR) { COMMENT_LABEL + ' ' + it }).append(LINE_SEPARATOR)
-                append(COMMENT_LABEL).append(" Encoding: ").append(ENCODING).append(LINE_SEPARATOR)
-                append(LINE_SEPARATOR)
             }
+            append(COMMENT_LABEL).append(" Last updated: ").append(DateUtils.toISO(Date())).append(LINE_SEPARATOR)
+            append(COMMENT_LABEL).append(" Encoding: ").append(ENCODING).append(LINE_SEPARATOR)
+            append(LINE_SEPARATOR)
             for ((k, v) in settings) {
                 append(k).append(VALUE_SEPARATOR).append(v).append(LINE_SEPARATOR)
             }

@@ -33,13 +33,13 @@ open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDel
     lateinit var inputs: Array<String>
         private set
 
-    fun <T> managed(fallback: () -> T): Delegate<T> = valueOf(context, fallback)
+    fun <T> managed(name: String? = null, fallback: () -> T): Delegate<T> = valueOf(context, name, fallback)
 
     protected open fun createOptions() {
     }
 
-    fun addOption(option: Option, command: Command) {
-        actions[option.opt] = command
+    fun addOption(option: Option, action: Action) {
+        actions[option.opt] = action
         options.addOption(option)
     }
 
@@ -47,12 +47,6 @@ open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDel
         addOption(option, object : Command {
             override fun execute(delegate: CLIDelegate): Int = action(delegate)
         })
-    }
-
-    fun addOption(name: String, option: Option, initializer: Initializer) {
-        names[option.opt] = name
-        actions[option.opt] = initializer
-        options.addOption(option)
     }
 
     fun addOptionGroup(group: OptionGroup) {
@@ -77,7 +71,8 @@ open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDel
                 val action = actions[option.opt]
                 if (action is Initializer) {
                     action.perform(this, cmd)
-                } else if (action is Command) {
+                }
+                if (action is Command) {
                     commands.add(action)
                 }
             }
@@ -109,7 +104,5 @@ open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDel
 
     private val actions = HashMap<String, Action>()
 
-    internal val names = HashMap<String, String>()
-
-    private val commands = LinkedList<Command>()
+    private val commands = LinkedHashSet<Command>()
 }

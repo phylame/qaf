@@ -26,7 +26,7 @@ interface Command : Action {
     fun execute(delegate: CLIDelegate): Int
 }
 
-abstract class SubCommand(val error: String = "no input") : Command {
+abstract class SubCommand(val error: String = "no command found") : Command {
     override fun execute(delegate: CLIDelegate): Int {
         if (delegate.inputs.isEmpty()) {
             App.error(error)
@@ -49,7 +49,7 @@ interface ValueFetcher<T : Any> : Initializer {
             App.exit(-1)
         } else {
             if (validator?.invoke(value) ?: true) {
-                delegate.context[delegate.names[option]!!] = value
+                delegate.context[option] = value
             } else {
                 App.exit(-1)
             }
@@ -76,20 +76,34 @@ inline fun <reified T : Any> fetcherOf(option: String): TypedFetcher<T> = TypedF
 fun <T : Any> fetcherOf(option: String, clazz: Class<T>, validator: ((T) -> Boolean)? = null): TypedFetcher<T> =
         TypedFetcher(option, clazz, validator)
 
-open class ListFetcher(val option: String) : Initializer {
-    override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
-        delegate.context[delegate.names[option]!!] = cmd.getOptionValues(option)
+abstract class SingleInitializer(val option: String) : Initializer {
+    private var performed = false
+
+    override final fun perform(delegate: CLIDelegate, cmd: CommandLine) {
+        // only perform once
+        if (!performed) {
+            init(delegate, cmd)
+            performed = true
+        }
+    }
+
+    protected abstract fun init(delegate: CLIDelegate, cmd: CommandLine)
+}
+
+open class ListFetcher(option: String) : SingleInitializer(option) {
+    override fun init(delegate: CLIDelegate, cmd: CommandLine) {
+        delegate.context[option] = cmd.getOptionValues(option)
     }
 }
 
-open class PropertiesFetcher(val option: String) : Initializer {
-    override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
-        delegate.context[delegate.names[option]!!] = cmd.getOptionProperties(option)
+open class PropertiesFetcher(option: String) : SingleInitializer(option) {
+    override fun init(delegate: CLIDelegate, cmd: CommandLine) {
+        delegate.context[option] = cmd.getOptionProperties(option)
     }
 }
 
 open class Switcher(val option: String) : Initializer {
     override fun perform(delegate: CLIDelegate, cmd: CommandLine) {
-        delegate.context[delegate.names[option]!!] = true
+        delegate.context[option] = true
     }
 }
