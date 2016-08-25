@@ -17,11 +17,7 @@
 package pw.phylame.qaf.ixin
 
 import pw.phylame.qaf.core.Settings
-import pw.phylame.ycl.format.Converter
-import pw.phylame.ycl.format.Converters
-import java.awt.Color
 import java.awt.Dimension
-import java.awt.Font
 import java.awt.Point
 import java.util.*
 import javax.swing.Action
@@ -30,7 +26,7 @@ import javax.swing.JMenuBar
 import javax.swing.JToolBar
 
 open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) {
-    val menuActions = HashMap<String, Action>()
+    val actions = HashMap<String, Action>()
 
     var toolBar: JToolBar? = null
 
@@ -41,8 +37,7 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
             statusBar?.text = value
         }
 
-
-    protected fun createComponents() {
+    protected fun createComponents(designer: Designer, listener: CommandListener? = null) {
         val pane = contentPane
 
         createStatusBar()
@@ -103,49 +98,6 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
 
         val defaultSize by lazy {
             Dimension(780, 439)
-        }
-
-        init {
-            // register converter for UI model
-            Converters.set(Point::class.java, object : Converter<Point> {
-                override fun parse(str: String): Point {
-                    val parts = str.split("-".toRegex())
-                    return Point(Integer.decode(parts[0].trim()), Integer.decode(parts[1].trim()))
-                }
-
-                override fun render(o: Point): String = "${o.x}-${o.y}"
-            })
-
-            Converters.set(Dimension::class.java, object : Converter<Dimension> {
-                override fun parse(str: String): Dimension {
-                    val parts = str.split("-".toRegex())
-                    return Dimension(Integer.decode(parts[0].trim()), Integer.decode(parts[1].trim()))
-                }
-
-                override fun render(o: Dimension): String = "${o.width}-${o.width}"
-            })
-
-            Converters.set(Font::class.java, object : Converter<Font> {
-                override fun parse(str: String): Font = Font.decode(str)
-
-                override fun render(o: Font): String {
-                    val b = StringBuilder(o.family).append("-")
-                    when (o.style) {
-                        Font.PLAIN -> b.append("plain")
-                        Font.BOLD -> b.append("bold")
-                        Font.ITALIC -> b.append("italic")
-                        Font.BOLD or Font.ITALIC -> b.append("bolditalic")
-                    }
-                    b.append("-").append(o.size)
-                    return b.toString()
-                }
-            })
-
-            Converters.set(Color::class.java, object : Converter<Color> {
-                override fun parse(str: String): Color = Color.decode(str)
-
-                override fun render(o: Color): String = "#" + String.format("%X", o.rgb).substring(2)
-            })
         }
     }
 }

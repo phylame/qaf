@@ -11,31 +11,31 @@ import java.util.*
 import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.KeyStroke
-import kotlin.reflect.KProperty
 
-private const val TAG = "ACTIONs"
+private const val TAG = "ACTION"
 
-const val SELECTED_ICON_KEY = "SelectedIcon"
-
-annotation class Actioned(val name: String = "")
-
-interface CommandListener {
-    fun commandPerformed(command: String)
+operator fun <T : Any> Action.set(name: String, value: T?) {
+    putValue(name, value)
 }
 
-var Action.isSelected: Boolean get() = getValue(SELECTED_ICON_KEY) as? Boolean ?: false
+@Suppress("unchecked_cast")
+operator fun <T : Any> Action.get(name: String): T? = getValue(name) as? T
+
+var Action.isSelected: Boolean get() = getValue(Action.SELECTED_KEY) as? Boolean ?: false
     set(value) {
-        putValue(SELECTED_ICON_KEY, value)
+        putValue(Action.SELECTED_KEY, value)
     }
 
 abstract class IAction(id: String, val translator: Localizable = App, var resource: Resource? = null) : AbstractAction() {
     companion object {
-        const val SCOPE_KEY = "ScopeKey"
+        const val SELECTED_ICON_KEY = "IxinSelectedIcon"
+
+        const val SCOPE_KEY = "IxinScopeKey"
 
         var scopeSuffix = ".scope"
         var normalIconSuffix = ".icon"
-        var selectedIconSuffix = ".selected"
-        var showyIconSuffix = ".showy"
+        var selectedIconSuffix = "-selected"
+        var showyIconSuffix = "-showy"
         var shortcutKeySuffix = ".shortcut"
         var tipTextSuffix = ".tip"
         var detailsTextSuffix = ".details"
@@ -58,9 +58,9 @@ abstract class IAction(id: String, val translator: Localizable = App, var resour
         // name and mnemonic
         var text = textOf(id)
         if (text != null) {
-            val result = IxinUtils.splitMnemonic(text)
+            val result = Ixin.splitMnemonic(text)
             putValue(Action.NAME, result.name)
-            if (IxinUtils.mnemonicEnable && result.mnemonic != 0) {
+            if (Ixin.mnemonicEnable && result.mnemonic != 0) {
                 putValue(Action.MNEMONIC_KEY, result.mnemonic)
                 putValue(Action.DISPLAYED_MNEMONIC_INDEX_KEY, result.index)
             }
@@ -72,7 +72,7 @@ abstract class IAction(id: String, val translator: Localizable = App, var resour
             putValue(SCOPE_KEY, text)
         }
 
-        // icon
+        // icons
         val path = textOf(id + normalIconSuffix) ?: if (resource != null) iconPrefix + id + iconSuffix else null
         if (path != null) {
             putValue(Action.SMALL_ICON, resource?.getIcon(path))
@@ -104,17 +104,12 @@ abstract class IAction(id: String, val translator: Localizable = App, var resour
     } catch (e: MissingResourceException) {
         null
     }
+}
 
-    fun delegated(name: String): Delegate = Delegate(name)
+annotation class Actioned(val name: String = "")
 
-    inner class Delegate(val name: String) {
-        @Suppress("unchecked_cast")
-        operator fun <T> getValue(ref: Any?, property: KProperty<*>): T? = getValue(name) as? T
-
-        operator fun <T> setValue(ref: Any?, property: KProperty<*>, value: T?) {
-            putValue(name, value)
-        }
-    }
+interface CommandListener {
+    fun commandPerformed(command: String)
 }
 
 class DispatcherAction(val listener: CommandListener,
