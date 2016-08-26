@@ -66,9 +66,7 @@ interface ValueFetcher<T : Any> : Initializer {
 open class TypedFetcher<T : Any>(override val option: String,
                                  val clazz: Class<T>,
                                  override val validator: ((T) -> Boolean)? = null) : ValueFetcher<T> {
-    override fun parse(value: String): T? {
-        return Converters.parse(value, clazz)
-    }
+    override fun parse(value: String): T? = Converters.parse(value, clazz)
 }
 
 inline fun <reified T : Any> fetcherOf(option: String): TypedFetcher<T> = TypedFetcher(option, T::class.java)

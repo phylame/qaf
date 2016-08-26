@@ -21,12 +21,24 @@ operator fun <T : Any> Action.set(name: String, value: T?) {
 @Suppress("unchecked_cast")
 operator fun <T : Any> Action.get(name: String): T? = getValue(name) as? T
 
+fun MutableMap<String, Action>.actionFor(item: Item,
+                                         listener: CommandListener? = null,
+                                         translator: Localizable = App,
+                                         resource: Resource? = null): Action = getOrPut(item.id) {
+    item.asAction(listener ?: throw IllegalArgumentException("create action require commandListener"), translator, resource)
+}
+
+fun MutableMap<String, Action>.actionFor(id: String,
+                                         listener: CommandListener? = null,
+                                         translator: Localizable = App,
+                                         resource: Resource? = null): Action = actionFor(Item(id), listener, translator, resource)
+
 var Action.isSelected: Boolean get() = getValue(Action.SELECTED_KEY) as? Boolean ?: false
     set(value) {
         putValue(Action.SELECTED_KEY, value)
     }
 
-abstract class IAction(id: String, val translator: Localizable = App, var resource: Resource? = null) : AbstractAction() {
+abstract class IAction(id: String, translator: Localizable = App, var resource: Resource? = null) : AbstractAction() {
     companion object {
         const val SELECTED_ICON_KEY = "IxinSelectedIcon"
 
@@ -56,64 +68,66 @@ abstract class IAction(id: String, val translator: Localizable = App, var resour
         }
 
         // name and mnemonic
-        var text = textOf(id)
+        var text = translator.getOr(id)
         if (text != null) {
-            val result = Ixin.splitMnemonic(text)
+            val result = Ixin.mnemonicOf(text)
             putValue(Action.NAME, result.name)
-            if (Ixin.mnemonicEnable && result.mnemonic != 0) {
+            if (result.isEnable) {
                 putValue(Action.MNEMONIC_KEY, result.mnemonic)
                 putValue(Action.DISPLAYED_MNEMONIC_INDEX_KEY, result.index)
             }
         }
 
         // scope
-        text = textOf(id + scopeSuffix)
+        text = translator.getOr(id + scopeSuffix)
         if (text != null) {
             putValue(SCOPE_KEY, text)
         }
 
         // icons
-        val path = textOf(id + normalIconSuffix) ?: if (resource != null) iconPrefix + id + iconSuffix else null
-        if (path != null) {
-            putValue(Action.SMALL_ICON, resource?.getIcon(path))
-            putValue(Action.LARGE_ICON_KEY, resource?.getIcon(path, showyIconSuffix))
-            putValue(SELECTED_ICON_KEY, resource?.getIcon(path, selectedIconSuffix))
+        val path = translator.getOr(id + normalIconSuffix) ?: if (resource != null) iconPrefix + id + iconSuffix else null
+        if (path != null && resource != null) {
+            putValue(Action.SMALL_ICON, resource!!.iconFor(path))
+            putValue(Action.LARGE_ICON_KEY, resource!!.iconFor(path, showyIconSuffix))
+            putValue(SELECTED_ICON_KEY, resource!!.iconFor(path, selectedIconSuffix))
         }
 
         // menu accelerator
-        text = textOf(id + shortcutKeySuffix)
+        text = translator.getOr(id + shortcutKeySuffix)
         if (text != null) {
             putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(text))
         }
 
         // tip
-        text = textOf(id + tipTextSuffix)
+        text = translator.getOr(id + tipTextSuffix)
         if (text != null) {
             putValue(Action.SHORT_DESCRIPTION, text)
         }
 
         // details
-        text = textOf(id + detailsTextSuffix)
+        text = translator.getOr(id + detailsTextSuffix)
         if (text != null) {
             putValue(Action.LONG_DESCRIPTION, text)
         }
     }
+}
 
-    private fun textOf(key: String): String? = try {
-        translator.get(key).let { if (it.isNotEmpty()) it else null }
-    } catch (e: MissingResourceException) {
-        null
+class IgnoredAction(id: String,
+                    translator: Localizable = App,
+                    resource: Resource? = null) : IAction(id, translator, resource) {
+    override fun actionPerformed(e: ActionEvent?) {
+        // do nothing
     }
 }
 
-annotation class Actioned(val name: String = "")
+annotation class Actioned(val value: String = "")
 
 interface CommandListener {
     fun commandPerformed(command: String)
 }
 
-class DispatcherAction(val listener: CommandListener,
-                       id: String,
+class DispatcherAction(id: String,
+                       val listener: CommandListener,
                        translator: Localizable = App,
                        resource: Resource? = null) : IAction(id, translator, resource) {
     override fun actionPerformed(e: ActionEvent) {
@@ -124,27 +138,40 @@ class DispatcherAction(val listener: CommandListener,
 /**
  * Dispatches command to the proxy object.
  */
-open class CommandDispatcher(val proxy: Any) : CommandListener {
-    private val methods = HashMap<String, Method>()
+open class CommandDispatcher(val proxies: Array<Any>) : CommandListener {
+    private val invocations = HashMap<String, Invocation>()
 
     init {
+        for (proxy in proxies) {
+            prepareProxy(proxy)
+        }
+    }
+
+    private fun prepareProxy(proxy: Any) {
         proxy.javaClass.methods.filter {
-            Modifier.isPublic(it.modifiers) && !Modifier.isStatic(it.modifiers) && !Modifier.isAbstract(it.modifiers)
+            Modifier.isPublic(it.modifiers) && !Modifier.isStatic(it.modifiers) && !Modifier.isAbstract(it.modifiers) && it.parameterTypes.isEmpty()
         }.forEach {
             val actioned = it.getAnnotation(Actioned::class.java)
             if (actioned != null) {
-                methods.put(if (actioned.name.isNotEmpty()) actioned.name else it.name, it)
+                invocations.put(if (actioned.value.isNotEmpty()) actioned.value else it.name, Invocation(proxy, it))
             }
         }
     }
 
     override fun commandPerformed(command: String) {
         try {
-            methods[command]?.invoke(proxy) ?: throw RuntimeException("No such method of proxy for command: $command")
+            val invocation = invocations[command]
+            if (invocation != null) {
+                invocation.method.invoke(invocation.proxy)
+            } else {
+                throw RuntimeException("No such method of proxy for command: $command")
+            }
         } catch (e: IllegalAccessException) {
             throw RuntimeException("Cannot execute command: $command", e)
         } catch (e: InvocationTargetException) {
             throw RuntimeException("Cannot execute command: $command", e)
         }
     }
+
+    data class Invocation(val proxy: Any, val method: Method)
 }

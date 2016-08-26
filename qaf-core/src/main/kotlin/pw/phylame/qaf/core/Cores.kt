@@ -16,11 +16,21 @@
 
 package pw.phylame.qaf.core
 
+import pw.phylame.ycl.io.IOUtils
 import java.text.MessageFormat
 import java.util.*
 
+data class Assembly(val name: String = "", val version: String = "")
+
 interface Localizable {
+    @Throws(MissingResourceException::class)
     fun get(key: String): String
+
+    fun getOr(key: String, default: String? = null): String? = try {
+        get(key).let { if (it.isNotEmpty()) it else default }
+    } catch (e: MissingResourceException) {
+        default
+    }
 
     fun tr(key: String): String = get(key)
 
@@ -29,18 +39,9 @@ interface Localizable {
     fun format(pattern: String, args: Array<out Any>): String = MessageFormat.format(pattern, *args)
 }
 
-data class Assembly(
-        val name: String = "",
-        val version: String = ""
-)
-
-class Translator
-private constructor(val bundle: ResourceBundle) : Localizable {
-    constructor(path: String,
-                locale: Locale = Locale.getDefault(),
-                loader: ClassLoader = Thread.currentThread().contextClassLoader) :
+class Translator private constructor(val bundle: ResourceBundle) : Localizable {
+    constructor(path: String, locale: Locale = Locale.getDefault(), loader: ClassLoader = IOUtils.getContextClassLoader()) :
     this(ResourceBundle.getBundle(path, locale, loader))
 
     override fun get(key: String): String = bundle.getString(key)
-
 }

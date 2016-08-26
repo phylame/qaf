@@ -23,17 +23,17 @@ import java.nio.charset.Charset
 import java.util.*
 import kotlin.reflect.KProperty
 
-open class Settings(name: String = "settings", loading: Boolean = true, autoSync: Boolean = true) {
+open class Settings(name: String = "settings", loading: Boolean = true, autosync: Boolean = true) {
     companion object {
-        val ENCODING = "UTF-8"
+        var encoding = "UTF-8"
 
-        val COMMENT_LABEL = "#"
+        var commentLabel = "#"
 
-        val VALUE_SEPARATOR = "="
+        var valueSeparator = "="
 
-        val LINE_SEPARATOR = System.lineSeparator()
+        var lineSeparator: String = System.lineSeparator()
 
-        val FILE_SUFFIX = ".pref"
+        var fileSuffix = ".pref"
     }
 
     private val settings = LinkedHashMap<String, String>()
@@ -43,7 +43,7 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
 
     var comment: String = ""
 
-    val path = App.pathInHome(name + FILE_SUFFIX)
+    val path = App.pathOf(name + fileSuffix)
 
     init {
         if (loading) {
@@ -52,7 +52,7 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
                 FileInputStream(file).use { load(it) }
             }
         }
-        if (autoSync) {
+        if (autosync) {
             App.cleanups.add(Runnable { sync(false) })
         }
     }
@@ -80,27 +80,27 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
     }
 
     protected open fun load(input: InputStream) {
-        input.bufferedReader(Charset.forName(ENCODING)).forEachLine {
+        input.bufferedReader(Charset.forName(encoding)).forEachLine {
             val line = it.trim()
-            if (line.isNotEmpty() && !line.startsWith(COMMENT_LABEL)) {
-                val pos = line.indexOf(VALUE_SEPARATOR)
+            if (line.isNotEmpty() && !line.startsWith(commentLabel)) {
+                val pos = line.indexOf(valueSeparator)
                 if (pos > -1) {
-                    settings[line.substring(0, pos).trim()] = line.substring(pos + VALUE_SEPARATOR.length)
+                    settings[line.substring(0, pos).trim()] = line.substring(pos + valueSeparator.length)
                 }
             }
         }
     }
 
     protected open fun store(output: OutputStream) {
-        output.bufferedWriter(Charset.forName(ENCODING)).apply {
+        output.bufferedWriter(Charset.forName(encoding)).apply {
             if (comment.isNotBlank()) {
-                append(comment.lineSequence().joinToString(LINE_SEPARATOR) { COMMENT_LABEL + ' ' + it }).append(LINE_SEPARATOR)
+                append(comment.lineSequence().joinToString(lineSeparator) { commentLabel + ' ' + it }).append(lineSeparator)
             }
-            append(COMMENT_LABEL).append(" Last updated: ").append(DateUtils.toISO(Date())).append(LINE_SEPARATOR)
-            append(COMMENT_LABEL).append(" Encoding: ").append(ENCODING).append(LINE_SEPARATOR)
-            append(LINE_SEPARATOR)
+            append(commentLabel).append(" Last updated: ").append(DateUtils.toISO(Date())).append(lineSeparator)
+            append(commentLabel).append(" Encoding: ").append(encoding).append(lineSeparator)
+            append(lineSeparator)
             for ((k, v) in settings) {
-                append(k).append(VALUE_SEPARATOR).append(v).append(LINE_SEPARATOR)
+                append(k).append(valueSeparator).append(v).append(lineSeparator)
             }
             flush()
         }
@@ -109,6 +109,8 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
     val size: Int get() = settings.size
 
     val names: Set<String> get() = settings.keys
+
+    val items: Set<Map.Entry<String, String>> get() = settings.entries
 
     fun forEach(action: (Map.Entry<String, String>) -> Unit) {
         settings.forEach(action)
@@ -140,7 +142,7 @@ open class Settings(name: String = "settings", loading: Boolean = true, autoSync
 
     fun update(map: Map<String, String>, clearing: Boolean = false) {
         if (clearing) {
-            settings.clone()
+            clear()
         }
         settings.putAll(map)
         modified = true

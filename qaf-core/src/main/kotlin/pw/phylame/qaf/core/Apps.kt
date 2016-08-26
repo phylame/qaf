@@ -16,14 +16,15 @@
 
 package pw.phylame.qaf.core
 
+import pw.phylame.ycl.io.IOUtils
 import pw.phylame.ycl.log.Log
 import java.io.File
 import java.io.InputStream
 import java.util.*
 
 const val PLUGIN_CONFIG_KEY = "qaf.config.path"
-
-const val CUSTOMIZED_HOME_KEY = "qaf.home"
+const val DEFAULT_CONFIG_PATH = "META-INF/qaf/plugin.prop"
+const val CUSTOMIZED_HOME_KEY = "qaf.home.path"
 
 /**
  * The delegate for app workflow, when creating the delegate instance, the methods of App is inaccessible.
@@ -45,7 +46,8 @@ interface AppDelegate : Runnable {
      * Does tasks when quitting app.
      */
     fun onQuit() {
-
+        App.plugins.values.forEach { it.destroy() }
+        App.cleanups.forEach { it.run() }
     }
 }
 
@@ -60,11 +62,7 @@ interface Plugin {
 }
 
 object App : Localizable {
-    const val TAG = "APP"
-
-    private val pluginPath by lazy {
-        System.getProperty(PLUGIN_CONFIG_KEY) ?: "META-INF/qaf/plugin.prop"
-    }
+    private const val TAG = "APP"
 
     val plugins: MutableMap<String, Plugin> = LinkedHashMap()
 
@@ -82,32 +80,32 @@ object App : Localizable {
     lateinit var translator: Localizable
 
     val home: String by lazy {
-        (System.getProperty(CUSTOMIZED_HOME_KEY) ?: System.getProperty("user.home")) + File.separatorChar + '.' + assembly.name
+        (System.getProperty(CUSTOMIZED_HOME_KEY, System.getProperty("user.home"))) + File.separatorChar + '.' + assembly.name
     }
 
     fun ensureHomeExisted() {
         val dir = File(home)
         if (!dir.exists() && !dir.mkdir()) {
-            throw RuntimeException("Cannot create home directory: $home")
+            throw RuntimeException("Cannot create home directory: \"$home\"")
         }
     }
 
-    fun loadPlugins(loader: ClassLoader = Thread.currentThread().contextClassLoader) {
-        loader.getResources(pluginPath).asSequence().forEach {
+    fun loadPlugins(blacklist: Set<String> = emptySet(), loader: ClassLoader? = null) {
+        IOUtils.resourcesFor(System.getProperty(PLUGIN_CONFIG_KEY, DEFAULT_CONFIG_PATH), loader).asSequence().forEach {
             it.openStream().buffered().use {
-                loadPlugin(it)
+                loadPlugin(it, blacklist, loader)
             }
         }
     }
 
-    fun loadPlugin(input: InputStream) {
-        try {
-            for (line in input.bufferedReader().lineSequence()) {
-                val path = line.trim()
-                if (path.isBlank() || path.startsWith('#')) {
-                    continue
-                }
-                val clazz = Class.forName(path)
+    fun loadPlugin(input: InputStream, blacklist: Set<String> = emptySet(), loader: ClassLoader? = null) {
+        for (line in input.bufferedReader().lineSequence()) {
+            val path = line.trim()
+            if (path.isBlank() || path.startsWith('#') || path in blacklist) {
+                continue
+            }
+            try {
+                val clazz = loader?.loadClass(path) ?: Class.forName(path)
                 if (Plugin::class.java.isAssignableFrom(clazz)) {
                     val plugin = clazz.newInstance() as Plugin
                     if (delegate.onPlugin(plugin)) {
@@ -115,13 +113,13 @@ object App : Localizable {
                         plugins[plugin.id] = plugin
                     }
                 }
+            } catch (e: ClassNotFoundException) {
+                Log.e(TAG, "not found plugin in \"$path\"")
             }
-        } catch (e: ClassNotFoundException) {
-            Log.e(TAG, e)
         }
     }
 
-    fun pathInHome(name: String): String = home + File.separatorChar + name
+    fun pathOf(name: String): String = home + File.separatorChar + name
 
     fun echo(msg: Any) {
         System.out.println("${assembly.name}: $msg")
@@ -178,19 +176,15 @@ object App : Localizable {
     }
 
     fun exit(status: Int = 0): Nothing {
-        plugins.forEach { it.value.destroy() }
-        cleanups.forEach { it.run() }
         delegate.onQuit()
         System.exit(status)
         // that will never be executed
-        throw RuntimeException()
+        throw InternalError()
     }
 
     private fun start() {
         delegate.onStart()
         delegate.run()
-        // if delegate invoked exit, the next will be ignored
-        exit(0)
     }
 
     override fun get(key: String): String = translator.get(key)

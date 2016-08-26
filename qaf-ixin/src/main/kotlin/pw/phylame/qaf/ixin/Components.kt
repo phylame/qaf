@@ -17,10 +17,10 @@
 package pw.phylame.qaf.ixin
 
 import java.awt.BorderLayout
-import javax.swing.BorderFactory
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.JToolBar
+import java.awt.Component
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import javax.swing.*
 
 var JToolBar.isLocked: Boolean get() = !isFloatable
     set(value) {
@@ -55,4 +55,97 @@ class StatusBar : JPanel(BorderLayout()) {
 
     // previous text
     private var previous: String? = null
+}
+
+fun mnemonicLabel(text: String): JLabel {
+    val result = Ixin.mnemonicOf(text)
+    val label = JLabel(result.name)
+    if (result.isEnable) {
+        label.displayedMnemonic = result.mnemonic
+        label.displayedMnemonicIndex = result.index
+    }
+    return label
+}
+
+fun Component.withLabel(text: String): JLabel {
+    val label = mnemonicLabel(text)
+    label.labelFor = this
+    return label
+}
+
+fun alignedPane(alignment: Int, space: Int, vararg components: Component): JPanel? {
+    if (components.isEmpty()) {
+        return null
+    }
+
+    val pane = JPanel()
+    pane.layout = BoxLayout(pane, BoxLayout.LINE_AXIS)
+
+    if (alignment != -1 && alignment != SwingConstants.LEFT) {
+        pane.add(Box.createHorizontalGlue())
+    }
+
+    val end = components.size - 1
+    for (ix in 0..end - 1) {
+        pane.add(components[ix])
+        pane.add(Box.createHorizontalStrut(space))
+    }
+    pane.add(components[end])
+
+    if (alignment != -1 && alignment != SwingConstants.RIGHT) {
+        pane.add(Box.createHorizontalGlue())
+    }
+    return pane
+}
+
+
+interface TextProvider {
+    val text: String
+}
+
+fun Component.performOn(form: Form, provider: TextProvider) {
+    addMouseListener(StatusTextPerformer(provider, form))
+}
+
+fun Component.performOn(form: Form, text: String) {
+    performOn(form, object : TextProvider {
+        override val text: String = text
+    })
+}
+
+fun Component.performOn(form: Form, action: Action) {
+    performOn(form, object : TextProvider {
+        override val text: String get() = action[Action.LONG_DESCRIPTION] ?: ""
+    })
+}
+
+private class StatusTextPerformer(val provider: TextProvider, val form: Form) : MouseAdapter() {
+    private var closed = true
+
+    override fun mouseEntered(e: MouseEvent) {
+        showTip()
+    }
+
+    override fun mouseExited(e: MouseEvent) {
+        closeTip()
+    }
+
+    override fun mouseReleased(e: MouseEvent) {
+        closeTip()
+    }
+
+    private fun showTip() {
+        val text = provider.text
+        if (text.isNotEmpty()) {
+            form.statusBar?.setTemporary(text)
+            closed = false
+        }
+    }
+
+    private fun closeTip() {
+        if (!closed) {
+            form.statusBar?.reset()
+            closed = true
+        }
+    }
 }

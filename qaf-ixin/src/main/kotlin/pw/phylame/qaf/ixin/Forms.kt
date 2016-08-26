@@ -16,7 +16,10 @@
 
 package pw.phylame.qaf.ixin
 
+import pw.phylame.qaf.core.App
+import pw.phylame.qaf.core.Localizable
 import pw.phylame.qaf.core.Settings
+import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.Point
 import java.util.*
@@ -37,10 +40,21 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
             statusBar?.text = value
         }
 
-    protected fun createComponents(designer: Designer, listener: CommandListener? = null) {
+    protected fun createComponents(designer: Designer, commandListener: CommandListener? = null) {
+        val delegate = (App.delegate as? IxinDelegate<*>) ?: throw IllegalStateException("createComponents in only used in Ixin app")
+        val translator = App
+        val resource = delegate.resource
+        val listener = commandListener ?: delegate
         val pane = contentPane
-
+        if (designer.menus?.isNotEmpty() ?: false) {
+            createMenuBar(designer.menus!!, listener, translator, resource)
+            if (designer.toolbar?.isNotEmpty() ?: false) {
+                createToolBar(designer.toolbar!!, listener, translator, resource)
+                pane.add(toolBar, BorderLayout.PAGE_START)
+            }
+        }
         createStatusBar()
+        pane.add(statusBar, BorderLayout.PAGE_END)
     }
 
     open fun init() {
@@ -76,13 +90,20 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
         snap[STATUS_BAR_VISIBLE] = statusBar?.isVisible ?: false
     }
 
-    private fun createMenuBar() {
+    private fun createMenuBar(menus: Array<Menu>, listener: CommandListener, translator: Localizable, resource: Resource) {
         val menuBar = JMenuBar()
+        for (menu in menus) {
+            menuBar.add(menu.asMenu(translator, resource).addItems(menu.items, actions, listener, translator, resource, this))
+        }
+        if (menuBar.menuCount > 0) {
+            jMenuBar = menuBar
+        }
     }
 
-    private fun createToolBar() {
+    private fun createToolBar(items: Array<Item>, listener: CommandListener, translator: Localizable, resource: Resource) {
         toolBar = JToolBar(title)
         toolBar!!.isRollover = true
+        toolBar!!.addItems(items, actions, listener, translator, resource, this)
     }
 
     private fun createStatusBar() {

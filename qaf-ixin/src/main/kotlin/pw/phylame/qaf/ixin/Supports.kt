@@ -25,12 +25,7 @@ import java.awt.Dimension
 import java.awt.Font
 import java.awt.Point
 import java.util.*
-import javax.swing.JDialog
-import javax.swing.JFrame
-import javax.swing.UIDefaults
-import javax.swing.UIManager
-
-interface Designer
+import javax.swing.*
 
 object Ixin {
     const val DEFAULT_THEME_NAME = "Default"
@@ -79,35 +74,27 @@ object Ixin {
     }
 
     // 4
-    fun setGlobalFont(newFont: Font) {
-        val uiDefaults = UIManager.getLookAndFeelDefaults()
+    fun setGlobalFont(font: Font) {
+        val defaults = UIManager.getLookAndFeelDefaults()
         for (key in fontKeys) {
-            val value = uiDefaults[key]
-            var font: Font? = null
+            val value = defaults[key]
             if (value == null) {
-                font = newFont
+                defaults[key] = font
             } else if (value is Font) {
-                font = newFont.deriveFont(value.style)
+                defaults[key] = font.deriveFont(value.style)
             } else if (value is UIDefaults.ActiveValue) {
-                font = value.createValue(uiDefaults) as Font
-                font = newFont.deriveFont(font.style)
+                defaults[key] = font.deriveFont((value.createValue(defaults) as Font).style)
             } else if (value is UIDefaults.LazyValue) {
-                font = value.createValue(uiDefaults) as Font
-                font = newFont.deriveFont(font.style)
-            }
-            if (font != null) {
-                uiDefaults.put(key, font)
+                defaults[key] = font.deriveFont((value.createValue(defaults) as Font).style)
             }
         }
     }
 
-    data class MnemonicResult(
-            val name: String,
-            val mnemonic: Int,
-            val index: Int
-    )
+    data class MnemonicTuple(val name: String, val mnemonic: Int, val index: Int) {
+        val isEnable: Boolean get() = mnemonicEnable && mnemonic != 0
+    }
 
-    fun splitMnemonic(name: String): MnemonicResult {
+    fun mnemonicOf(name: String): MnemonicTuple {
         // get mnemonic from name
         var text = name
         var mnemonic = 0
@@ -120,7 +107,7 @@ object Ixin {
                 text = name.substring(0, index) + name.substring(index + 1)
             }
         }
-        return MnemonicResult(text, mnemonic, index)
+        return MnemonicTuple(text, mnemonic, index)
     }
 
     fun trimMnemonic(text: String, mnemonicIndex: Int, bracketLength: Int = 1): String {
@@ -129,6 +116,18 @@ object Ixin {
         }
         return text.substring(0, mnemonicIndex - bracketLength) + text.substring(mnemonicIndex + 1 + bracketLength)
     }
+
+    fun formatKeyStroke(keyStroke: KeyStroke): String {
+        var str = keyStroke.toString()
+        str = str.replace("ctrl ".toRegex(), "Ctrl+")
+        str = str.replace("shift ".toRegex(), "Shift+")
+        str = str.replace("alt ".toRegex(), "Alt+")
+        str = str.replace("typed ".toRegex(), "")
+        str = str.replace("pressed ".toRegex(), "")
+        str = str.replace("released ".toRegex(), "")
+        return str
+    }
+
 
     init {
         // register converter for UI model
@@ -147,7 +146,7 @@ object Ixin {
                 return Dimension(Integer.decode(pair.first.trim()), Integer.decode(pair.second.trim()))
             }
 
-            override fun render(o: Dimension): String = "${o.width}-${o.width}"
+            override fun render(o: Dimension): String = "${o.width}-${o.height}"
         })
 
         Converters.set(Font::class.java, object : Converter<Font> {

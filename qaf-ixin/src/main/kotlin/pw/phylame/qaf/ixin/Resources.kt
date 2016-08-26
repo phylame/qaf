@@ -29,17 +29,17 @@ import javax.swing.ImageIcon
 class Resource(dir: String,
                val gfxDir: String = "gfx",
                val i18nDir: String = "i18n",
-               val loader: ClassLoader = Thread.currentThread().contextClassLoader) {
+               val loader: ClassLoader = Resource::class.java.classLoader) {
 
     val baseDir = if (dir.endsWith('/')) dir else dir + '/'
 
-    fun getIcon(name: String, suffix: String = ""): Icon? {
+    fun iconFor(name: String, suffix: String = ""): Icon? {
         val path = gfxDir + '/' + normalize(name, suffix)
         var icon = icons[path]
         if (icon != null) {
             return icon
         }
-        val url = findItem(path)
+        val url = itemFor(path)
         if (url != null) {
             icon = ImageIcon(url)
             icons[path] = icon
@@ -47,13 +47,13 @@ class Resource(dir: String,
         return icon
     }
 
-    fun getImage(name: String, suffix: String = ""): Image? {
+    fun imageFor(name: String, suffix: String = ""): Image? {
         val path = gfxDir + '/' + normalize(name, suffix)
         var image = images[path]
         if (image != null) {
             return image
         }
-        val url = findItem(path)
+        val url = itemFor(path)
         if (url != null) {
             image = Toolkit.getDefaultToolkit().getImage(url)
             images[path] = image
@@ -61,17 +61,16 @@ class Resource(dir: String,
         return image
     }
 
-    fun getTranslator(name: String, locale: Locale = Locale.getDefault()): Translator =
-            Translator(baseDir + i18nDir + '/' + name, locale, loader)
+    fun translatorFor(name: String, locale: Locale = Locale.getDefault()): Translator =
+            Translator((if (baseDir.startsWith(IOUtils.CLASS_PATH_PREFIX)) baseDir.substring(1) else baseDir)
+                    + i18nDir + '/' + name, locale, loader)
 
-    fun findItem(name: String, suffix: String = ""): URL? = IOUtils.resourceFor(baseDir + normalize(name, suffix), loader)
+    fun itemFor(name: String, suffix: String = ""): URL? = IOUtils.resourceFor(baseDir + normalize(name, suffix), loader)
 
-    fun normalize(name: String, suffix: String = ""): String =
-            name.iif(suffix.isNotEmpty()) {
-                val index = name.indexOf('.')
-                if (index == -1) name + suffix else name.substring(0, index) + suffix + name.substring(index)
-            }
-
+    fun normalize(name: String, suffix: String = ""): String = name.iif(suffix.isNotEmpty()) {
+        val index = name.indexOf('.')
+        if (index == -1) name + suffix else name.substring(0, index) + suffix + name.substring(index)
+    }
 
     private val icons = HashMap<String, Icon>()
     private val images = HashMap<String, Image>()
