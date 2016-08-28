@@ -1,5 +1,7 @@
 /*
- * Copyright 2016 Peng Wan <phylame@163.com>
+ * Copyright 2015-2016 Peng Wan <phylame@163.com>
+ *
+ * This file is part of IxIn.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +22,8 @@ import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Localizable
 import pw.phylame.qaf.core.Settings
 import java.awt.BorderLayout
-import java.awt.Dimension
 import java.awt.Point
+import java.awt.Toolkit
 import java.util.*
 import javax.swing.Action
 import javax.swing.JFrame
@@ -40,21 +42,24 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
             statusBar?.text = value
         }
 
-    protected fun createComponents(designer: Designer, commandListener: CommandListener? = null) {
-        val delegate = (App.delegate as? IxinDelegate<*>) ?: throw IllegalStateException("createComponents in only used in Ixin app")
+    init {
+        init()
+    }
+
+    protected fun createComponents(designer: Designer, listener: CommandListener? = null) {
+        val delegate = Ixin.myDelegate
+        val _listener = listener ?: delegate
         val translator = App
         val resource = delegate.resource
-        val listener = commandListener ?: delegate
-        val pane = contentPane
         if (designer.menus?.isNotEmpty() ?: false) {
-            createMenuBar(designer.menus!!, listener, translator, resource)
+            createMenuBar(designer.menus!!, _listener, translator, resource)
             if (designer.toolbar?.isNotEmpty() ?: false) {
-                createToolBar(designer.toolbar!!, listener, translator, resource)
-                pane.add(toolBar, BorderLayout.PAGE_START)
+                createToolBar(designer.toolbar!!, _listener, translator, resource)
+                contentPane.add(toolBar, BorderLayout.PAGE_START)
             }
         }
         createStatusBar()
-        pane.add(statusBar, BorderLayout.PAGE_END)
+        contentPane.add(statusBar, BorderLayout.PAGE_END)
     }
 
     open fun init() {
@@ -65,12 +70,13 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
         saveStatus()
     }
 
-    private fun restoreStatus() {
+    open protected fun restoreStatus() {
         if (snap == null) {
             return
         }
         toolBar?.isVisible = snap[TOOL_BAR_VISIBLE] ?: true
         toolBar?.isLocked = snap[TOOL_BAR_LOCKED] ?: false
+        toolBar?.isTextHidden = snap[TOOL_BAR_TEXT_HIDDEN] ?: true
         statusBar?.isVisible = snap[STATUS_BAR_VISIBLE] ?: true
         val point: Point? = snap[FORM_LOCATION] ?: null
         if (point != null) {
@@ -79,18 +85,19 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
         size = snap[FORM_DIMENSION] ?: defaultSize
     }
 
-    private fun saveStatus() {
+    open protected fun saveStatus() {
         if (snap == null) {
             return
         }
         snap[FORM_LOCATION] = location
         snap[FORM_DIMENSION] = size
-        snap[TOOL_BAR_VISIBLE] = toolBar?.isVisible ?: false
+        snap[TOOL_BAR_VISIBLE] = toolBar?.isVisible ?: true
         snap[TOOL_BAR_LOCKED] = toolBar?.isLocked ?: false
-        snap[STATUS_BAR_VISIBLE] = statusBar?.isVisible ?: false
+        snap[TOOL_BAR_TEXT_HIDDEN] = toolBar?.isTextHidden ?: true
+        snap[STATUS_BAR_VISIBLE] = statusBar?.isVisible ?: true
     }
 
-    private fun createMenuBar(menus: Array<Menu>, listener: CommandListener, translator: Localizable, resource: Resource) {
+    private fun createMenuBar(menus: Array<Group>, listener: CommandListener, translator: Localizable, resource: Resource) {
         val menuBar = JMenuBar()
         for (menu in menus) {
             menuBar.add(menu.asMenu(translator, resource).addItems(menu.items, actions, listener, translator, resource, this))
@@ -115,10 +122,11 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
         const val FORM_DIMENSION = "form.dimension"
         const val TOOL_BAR_VISIBLE = "form.toolbar.visible"
         const val TOOL_BAR_LOCKED = "form.toolbar.locked"
+        const val TOOL_BAR_TEXT_HIDDEN = "form.toolbar.textHidden"
         const val STATUS_BAR_VISIBLE = "form.statusbar.visible"
 
         val defaultSize by lazy {
-            Dimension(780, 439)
+            Toolkit.getDefaultToolkit().screenSize.scaleWith(0.6)
         }
     }
 }

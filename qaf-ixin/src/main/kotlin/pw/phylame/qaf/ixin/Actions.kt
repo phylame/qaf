@@ -1,10 +1,26 @@
+/*
+ * Copyright 2015-2016 Peng Wan <phylame@163.com>
+ *
+ * This file is part of IxIn.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package pw.phylame.qaf.ixin
 
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Localizable
-import pw.phylame.ycl.log.Log
 import java.awt.event.ActionEvent
-import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.util.*
@@ -12,33 +28,21 @@ import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.KeyStroke
 
-private const val TAG = "ACTION"
+@Suppress("unchecked_cast")
+operator fun <T : Any> Action.get(name: String): T? = getValue(name) as? T
 
 operator fun <T : Any> Action.set(name: String, value: T?) {
     putValue(name, value)
 }
-
-@Suppress("unchecked_cast")
-operator fun <T : Any> Action.get(name: String): T? = getValue(name) as? T
-
-fun MutableMap<String, Action>.actionFor(item: Item,
-                                         listener: CommandListener? = null,
-                                         translator: Localizable = App,
-                                         resource: Resource? = null): Action = getOrPut(item.id) {
-    item.asAction(listener ?: throw IllegalArgumentException("create action require commandListener"), translator, resource)
-}
-
-fun MutableMap<String, Action>.actionFor(id: String,
-                                         listener: CommandListener? = null,
-                                         translator: Localizable = App,
-                                         resource: Resource? = null): Action = actionFor(Item(id), listener, translator, resource)
 
 var Action.isSelected: Boolean get() = getValue(Action.SELECTED_KEY) as? Boolean ?: false
     set(value) {
         putValue(Action.SELECTED_KEY, value)
     }
 
-abstract class IAction(id: String, translator: Localizable = App, var resource: Resource? = null) : AbstractAction() {
+abstract class IAction(id: String,
+                       translator: Localizable = App,
+                       resource: Resource = Ixin.myDelegate.resource) : AbstractAction() {
     companion object {
         const val SELECTED_ICON_KEY = "IxinSelectedIcon"
 
@@ -59,14 +63,6 @@ abstract class IAction(id: String, translator: Localizable = App, var resource: 
     init {
         putValue(Action.ACTION_COMMAND_KEY, id)
 
-        if (resource == null) {
-            if (App.delegate !is IxinDelegate<*>) {
-                Log.w(TAG, "action should be used in Ixin app")
-            } else {
-                resource = (App.delegate as IxinDelegate<*>).resource
-            }
-        }
-
         // name and mnemonic
         var text = translator.getOr(id)
         if (text != null) {
@@ -85,12 +81,10 @@ abstract class IAction(id: String, translator: Localizable = App, var resource: 
         }
 
         // icons
-        val path = translator.getOr(id + normalIconSuffix) ?: if (resource != null) iconPrefix + id + iconSuffix else null
-        if (path != null && resource != null) {
-            putValue(Action.SMALL_ICON, resource!!.iconFor(path))
-            putValue(Action.LARGE_ICON_KEY, resource!!.iconFor(path, showyIconSuffix))
-            putValue(SELECTED_ICON_KEY, resource!!.iconFor(path, selectedIconSuffix))
-        }
+        val path = translator.getOr(id + normalIconSuffix) ?: iconPrefix + id + iconSuffix
+        putValue(Action.SMALL_ICON, resource.iconFor(path))
+        putValue(Action.LARGE_ICON_KEY, resource.iconFor(path, showyIconSuffix))
+        putValue(SELECTED_ICON_KEY, resource.iconFor(path, selectedIconSuffix))
 
         // menu accelerator
         text = translator.getOr(id + shortcutKeySuffix)
@@ -114,31 +108,31 @@ abstract class IAction(id: String, translator: Localizable = App, var resource: 
 
 class IgnoredAction(id: String,
                     translator: Localizable = App,
-                    resource: Resource? = null) : IAction(id, translator, resource) {
-    override fun actionPerformed(e: ActionEvent?) {
+                    resource: Resource = Ixin.myDelegate.resource) : IAction(id, translator, resource) {
+    override fun actionPerformed(e: ActionEvent) {
         // do nothing
     }
-}
-
-annotation class Actioned(val value: String = "")
-
-interface CommandListener {
-    fun commandPerformed(command: String)
 }
 
 class DispatcherAction(id: String,
                        val listener: CommandListener,
                        translator: Localizable = App,
-                       resource: Resource? = null) : IAction(id, translator, resource) {
+                       resource: Resource = Ixin.myDelegate.resource) : IAction(id, translator, resource) {
     override fun actionPerformed(e: ActionEvent) {
-        listener.commandPerformed(e.actionCommand)
+        listener.performed(e.actionCommand)
     }
+}
+
+annotation class Command(val value: String = "")
+
+interface CommandListener {
+    fun performed(command: String)
 }
 
 /**
  * Dispatches command to the proxy object.
  */
-open class CommandDispatcher(val proxies: Array<Any>) : CommandListener {
+open class CommandDispatcher(proxies: Array<Any>) : CommandListener {
     private val invocations = HashMap<String, Invocation>()
 
     init {
@@ -149,29 +143,25 @@ open class CommandDispatcher(val proxies: Array<Any>) : CommandListener {
 
     private fun prepareProxy(proxy: Any) {
         proxy.javaClass.methods.filter {
-            Modifier.isPublic(it.modifiers) && !Modifier.isStatic(it.modifiers) && !Modifier.isAbstract(it.modifiers) && it.parameterTypes.isEmpty()
+            Modifier.isPublic(it.modifiers)
+                    && !Modifier.isStatic(it.modifiers)
+                    && !Modifier.isAbstract(it.modifiers)
+                    && it.parameterTypes.isEmpty()
         }.forEach {
-            val actioned = it.getAnnotation(Actioned::class.java)
-            if (actioned != null) {
-                invocations.put(if (actioned.value.isNotEmpty()) actioned.value else it.name, Invocation(proxy, it))
+            val command = it.getAnnotation(Command::class.java)
+            if (command != null) {
+                invocations.put(if (command.value.isNotEmpty()) command.value else it.name, Invocation(proxy, it))
             }
         }
     }
 
-    override fun commandPerformed(command: String) {
-        try {
-            val invocation = invocations[command]
-            if (invocation != null) {
-                invocation.method.invoke(invocation.proxy)
-            } else {
-                throw RuntimeException("No such method of proxy for command: $command")
-            }
-        } catch (e: IllegalAccessException) {
-            throw RuntimeException("Cannot execute command: $command", e)
-        } catch (e: InvocationTargetException) {
-            throw RuntimeException("Cannot execute command: $command", e)
-        }
+    override fun performed(command: String) {
+        invocations[command]?.invoke() ?: throw RuntimeException("No such method of proxy for command: $command")
     }
 
-    data class Invocation(val proxy: Any, val method: Method)
+    data class Invocation(val proxy: Any, val method: Method) {
+        fun invoke() {
+            method.invoke(proxy)
+        }
+    }
 }

@@ -15,11 +15,20 @@
     <name>Qaf IxIn</name>
     <description>Fast GUI framework on Swing</description>
 
+    <properties>
+        <json.version>20160810</json.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>pw.phylame.qaf</groupId>
             <artifactId>qaf-core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>${json.version}</version>
         </dependency>
     </dependencies>
 

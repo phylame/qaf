@@ -1,5 +1,7 @@
 /*
- * Copyright 2016 Peng Wan <phylame@163.com>
+ * Copyright 2015-2016 Peng Wan <phylame@163.com>
+ *
+ * This file is part of IxIn.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +32,10 @@ interface IPlugin : Plugin {
 
 abstract class IxinDelegate<F : Form> : AppDelegate, CommandListener {
 
-    lateinit var resource: Resource
+    lateinit var proxy: CommandListener
         protected set
 
-    lateinit var proxy: CommandListener
+    lateinit var resource: Resource
         protected set
 
     lateinit var form: F
@@ -41,9 +43,9 @@ abstract class IxinDelegate<F : Form> : AppDelegate, CommandListener {
 
     abstract fun createForm(): F
 
-    override fun commandPerformed(command: String) {
+    override fun performed(command: String) {
         // forward to proxy
-        proxy.commandPerformed(command)
+        proxy.performed(command)
     }
 
     override fun onPlugin(plugin: Plugin): Boolean {

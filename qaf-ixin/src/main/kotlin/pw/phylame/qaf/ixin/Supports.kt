@@ -1,5 +1,7 @@
 /*
- * Copyright 2016 Peng Wan <phylame@163.com>
+ * Copyright 2015-2016 Peng Wan <phylame@163.com>
+ *
+ * This file is part of IxIn.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +18,7 @@
 
 package pw.phylame.qaf.ixin
 
+import pw.phylame.qaf.core.App
 import pw.phylame.ycl.format.Converter
 import pw.phylame.ycl.format.Converters
 import pw.phylame.ycl.io.IOUtils
@@ -27,9 +30,11 @@ import java.awt.Point
 import java.util.*
 import javax.swing.*
 
+fun Dimension.scaleWith(rate: Double): Dimension = Dimension((width * rate).toInt(), (height * rate).toInt())
+
 object Ixin {
     const val DEFAULT_THEME_NAME = "Default"
-    const val FONT_KEY_PATH = "!/pw/phylame/qaf/ixin/font-keys.txt"
+    const val FONT_KEY_PATH = "!pw/phylame/qaf/ixin/font-keys.txt"
     const val MNEMONIC_PREFIX = '&'
 
     var mnemonicEnable = true
@@ -43,6 +48,11 @@ object Ixin {
             themes[feel.name] = feel.className
         }
     }
+
+    @Suppress("unchecked_cast")
+    val myDelegate: IxinDelegate<*> get() = if (App.delegate is IxinDelegate<*>)
+        App.delegate as IxinDelegate<*>
+    else throw IllegalStateException("App should run with IxinDelegate")
 
     // 1
     fun setAntiAliasing(enable: Boolean) {
@@ -58,7 +68,7 @@ object Ixin {
 
     // 3
     fun setLafTheme(name: String) {
-        if (!name.isEmpty() && name != DEFAULT_THEME_NAME) {
+        if (name.isNotEmpty() && name != DEFAULT_THEME_NAME) {
             try {
                 UIManager.setLookAndFeel(themeFor(name))
             } catch (e: Exception) {
@@ -68,9 +78,11 @@ object Ixin {
     }
 
     val fontKeys by lazy {
-        IOUtils.openResource(FONT_KEY_PATH, Ixin::class.java.classLoader)?.bufferedReader()?.use {
-            it.lineSequence()
-        } ?: emptySequence()
+        val keys = LinkedList<String>()
+        IOUtils.openResource(FONT_KEY_PATH, Ixin::class.java.classLoader)?.bufferedReader()?.forEachLine {
+            keys.add(it.trim())
+        }
+        keys
     }
 
     // 4
@@ -119,18 +131,18 @@ object Ixin {
 
     fun formatKeyStroke(keyStroke: KeyStroke): String {
         var str = keyStroke.toString()
-        str = str.replace("ctrl ".toRegex(), "Ctrl+")
-        str = str.replace("shift ".toRegex(), "Shift+")
-        str = str.replace("alt ".toRegex(), "Alt+")
-        str = str.replace("typed ".toRegex(), "")
-        str = str.replace("pressed ".toRegex(), "")
-        str = str.replace("released ".toRegex(), "")
+        str = str.replaceFirst("ctrl ", "Ctrl+")
+        str = str.replaceFirst("shift ", "Shift+")
+        str = str.replaceFirst("alt ", "Alt+")
+        str = str.replaceFirst("typed ", "")
+        str = str.replaceFirst("pressed ", "")
+        str = str.replaceFirst("released ", "")
         return str
     }
 
 
     init {
-        // register converter for UI model
+        // register converter for UI objects
         Converters.set(Point::class.java, object : Converter<Point> {
             override fun parse(str: String): Point {
                 val pair = StringUtils.partition(str, '-')

@@ -1,5 +1,7 @@
 /*
- * Copyright 2016 Peng Wan <phylame@163.com>
+ * Copyright 2015-2016 Peng Wan <phylame@163.com>
+ *
+ * This file is part of IxIn.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +18,7 @@
 
 package pw.phylame.qaf.ixin
 
+import pw.phylame.ycl.util.Provider
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.event.MouseAdapter
@@ -37,7 +40,7 @@ class StatusBar : JPanel(BorderLayout()) {
     var text: String get() = label.text
         set (value) {
             previous = value
-            label.text = text
+            label.text = value
         }
 
     init {
@@ -45,7 +48,7 @@ class StatusBar : JPanel(BorderLayout()) {
         add(label, BorderLayout.LINE_START)
     }
 
-    fun setTemporary(text: String) {
+    fun perform(text: String) {
         label.text = text
     }
 
@@ -66,6 +69,15 @@ fun mnemonicLabel(text: String): JLabel {
     }
     return label
 }
+
+var <T : JToolBar> T.isTextHidden: Boolean get() = components.any { it is AbstractButton && it.hideActionText }
+    set(value) {
+        components.forEach {
+            if (it is AbstractButton) {
+                it.hideActionText = value
+            }
+        }
+    }
 
 fun Component.withLabel(text: String): JLabel {
     val label = mnemonicLabel(text)
@@ -98,28 +110,18 @@ fun alignedPane(alignment: Int, space: Int, vararg components: Component): JPane
     return pane
 }
 
-
-interface TextProvider {
-    val text: String
+fun <T : Component> T.performOn(form: Form, provider: Provider<String>): T {
+    addMouseListener(StatusPerformer(provider, form))
+    return this
 }
 
-fun Component.performOn(form: Form, provider: TextProvider) {
-    addMouseListener(StatusTextPerformer(provider, form))
-}
+fun <T : Component> T.performOn(form: Form, text: String): T = performOn(form, Provider { text })
 
-fun Component.performOn(form: Form, text: String) {
-    performOn(form, object : TextProvider {
-        override val text: String = text
-    })
-}
+fun <T : Component> T.performOn(form: Form, action: Action): T = performOn(form, Provider {
+    action[Action.LONG_DESCRIPTION] ?: ""
+})
 
-fun Component.performOn(form: Form, action: Action) {
-    performOn(form, object : TextProvider {
-        override val text: String get() = action[Action.LONG_DESCRIPTION] ?: ""
-    })
-}
-
-private class StatusTextPerformer(val provider: TextProvider, val form: Form) : MouseAdapter() {
+private class StatusPerformer(val provider: Provider<String>, val form: Form) : MouseAdapter() {
     private var closed = true
 
     override fun mouseEntered(e: MouseEvent) {
@@ -135,9 +137,9 @@ private class StatusTextPerformer(val provider: TextProvider, val form: Form) : 
     }
 
     private fun showTip() {
-        val text = provider.text
+        val text = provider.provide()
         if (text.isNotEmpty()) {
-            form.statusBar?.setTemporary(text)
+            form.statusBar?.perform(text)
             closed = false
         }
     }
