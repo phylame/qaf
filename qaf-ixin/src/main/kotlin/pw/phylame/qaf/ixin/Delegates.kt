@@ -20,7 +20,10 @@ package pw.phylame.qaf.ixin
 
 import pw.phylame.qaf.core.AppDelegate
 import pw.phylame.qaf.core.Plugin
+import java.awt.Image
+import java.net.URL
 import java.util.*
+import javax.swing.Icon
 import javax.swing.SwingUtilities
 
 interface IPlugin : Plugin {
@@ -71,3 +74,9 @@ abstract class IxinDelegate<F : Form> : AppDelegate, CommandListener {
 
     private val plugins = LinkedHashSet<IPlugin>()
 }
+
+fun iconFor(name: String, suffix: String = ""): Icon? = Ixin.myDelegate.resource.iconFor(name, suffix)
+
+fun imageFor(name: String, suffix: String = ""): Image? = Ixin.myDelegate.resource.imageFor(name, suffix)
+
+fun fileFor(name: String, suffix: String = ""): URL? = Ixin.myDelegate.resource.itemFor(name, suffix)

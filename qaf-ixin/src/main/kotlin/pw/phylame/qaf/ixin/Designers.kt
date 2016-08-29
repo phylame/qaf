@@ -77,6 +77,30 @@ open class JSONDesigner(input: InputStream) : Designer {
         private const val TAG = "JSONDesigner"
         const val MENUS_KEY = "menus"
         const val TOOLBAR_KEY = "toolbar"
+
+        fun parseItems(array: JSONArray, items: MutableCollection<Item>) {
+            for (item in array) {
+                when (item) {
+                    is String -> items.add(Item(item))
+                    is JSONObject -> {
+                        val id = item.getString("id")
+                        val _array = item.optJSONArray("items")
+                        if (_array != null) {
+                            val _items = LinkedList<Item>()
+                            parseItems(_array, _items)
+                            items.add(Group(id, _items.toTypedArray()))
+                        } else {
+                            items.add(Item(id,
+                                    item.optBoolean("enable", true),
+                                    item.optBoolean("selected", false),
+                                    Style.valueOf(item.optString("style", Style.PLAIN.name).toUpperCase())))
+                        }
+                    }
+                    JSONObject.NULL -> items.add(Separator)
+                    else -> throw BadDesignerException("Unexpected style of item: ${item.javaClass}")
+                }
+            }
+        }
     }
 
     private val _menus = LinkedList<Group>()
@@ -105,30 +129,6 @@ open class JSONDesigner(input: InputStream) : Designer {
             parseItems(json.getJSONArray(TOOLBAR_KEY), _toolbar)
         } catch (e: JSONException) {
             Log.d(TAG, e)
-        }
-    }
-
-    private fun parseItems(array: JSONArray, items: MutableCollection<Item>) {
-        for (item in array) {
-            when (item) {
-                is String -> items.add(Item(item))
-                is JSONObject -> {
-                    val id = item.getString("id")
-                    val _array = item.optJSONArray("items")
-                    if (_array != null) {
-                        val _items = LinkedList<Item>()
-                        parseItems(_array, _items)
-                        items.add(Group(id, _items.toTypedArray()))
-                    } else {
-                        items.add(Item(id,
-                                item.optBoolean("enable", true),
-                                item.optBoolean("selected", false),
-                                Style.valueOf(item.optString("style", Style.PLAIN.name).toUpperCase())))
-                    }
-                }
-                JSONObject.NULL -> items.add(Separator)
-                else -> throw BadDesignerException("Unexpected style of item: ${item.javaClass}")
-            }
         }
     }
 
