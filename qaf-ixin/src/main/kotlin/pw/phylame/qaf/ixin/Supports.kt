@@ -45,7 +45,11 @@ object Ixin {
 
     val themes = HashMap<String, String>()
 
-    fun themeFor(name: String): String = themes[name] ?: name
+    fun themeFor(name: String): String = themes[name] ?: when (name) {
+        "System" -> UIManager.getSystemLookAndFeelClassName()
+        "Java" -> UIManager.getCrossPlatformLookAndFeelClassName()
+        else -> name
+    }
 
     init {
         for (feel in UIManager.getInstalledLookAndFeels()) {
