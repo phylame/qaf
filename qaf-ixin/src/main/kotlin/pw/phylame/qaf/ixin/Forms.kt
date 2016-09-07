@@ -25,10 +25,7 @@ import java.awt.BorderLayout
 import java.awt.Point
 import java.awt.Toolkit
 import java.util.*
-import javax.swing.Action
-import javax.swing.JFrame
-import javax.swing.JMenuBar
-import javax.swing.JToolBar
+import javax.swing.*
 
 open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) {
     val actions = HashMap<String, Action>()
@@ -74,9 +71,12 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
         if (snap == null) {
             return
         }
-        toolBar?.isVisible = snap[TOOL_BAR_VISIBLE] ?: true
-        toolBar?.isLocked = snap[TOOL_BAR_LOCKED] ?: false
-        toolBar?.isTextHidden = snap[TOOL_BAR_TEXT_HIDDEN] ?: true
+        val toolbar = toolBar
+        if (toolbar != null) {
+            toolbar.isVisible = snap[TOOL_BAR_VISIBLE] ?: true
+            toolbar.isLocked = snap[TOOL_BAR_LOCKED] ?: false
+            toolbar.isTextHidden = snap[TOOL_BAR_TEXT_HIDDEN] ?: true
+        }
         statusBar?.isVisible = snap[STATUS_BAR_VISIBLE] ?: true
         val point: Point? = snap[FORM_LOCATION] ?: null
         if (point != null) {
@@ -91,10 +91,23 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
         }
         snap[FORM_LOCATION] = location
         snap[FORM_DIMENSION] = size
-        snap[TOOL_BAR_VISIBLE] = toolBar?.isVisible ?: true
-        snap[TOOL_BAR_LOCKED] = toolBar?.isLocked ?: false
-        snap[TOOL_BAR_TEXT_HIDDEN] = toolBar?.isTextHidden ?: true
+        val toolbar = toolBar
+        if (toolbar != null) {
+            snap[TOOL_BAR_VISIBLE] = toolbar.isVisible
+            snap[TOOL_BAR_LOCKED] = toolbar.isLocked
+            snap[TOOL_BAR_TEXT_HIDDEN] = toolbar.isTextHidden
+        }
         snap[STATUS_BAR_VISIBLE] = statusBar?.isVisible ?: true
+    }
+
+    fun createPopupMenu(items: Array<Item>, label: String = ""): JPopupMenu =
+            JPopupMenu(label).addItems(items, actions, Ixin.myDelegate, form = this)
+
+    operator fun Action.unaryPlus() {
+        val cmd: String? = this[Action.ACTION_COMMAND_KEY]
+        if (cmd != null) {
+            actions[cmd] = this
+        }
     }
 
     private fun createMenuBar(menus: Array<Group>, listener: CommandListener, translator: Localizable, resource: Resource) {
@@ -130,3 +143,4 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
         }
     }
 }
+

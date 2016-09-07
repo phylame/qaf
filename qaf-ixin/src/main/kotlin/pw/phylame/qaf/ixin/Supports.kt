@@ -39,6 +39,10 @@ object Ixin {
 
     var mnemonicEnable = true
 
+    val isMnemonicSupport by lazy {
+        "mac" !in System.getProperty("os.name")
+    }
+
     val themes = HashMap<String, String>()
 
     fun themeFor(name: String): String = themes[name] ?: name

@@ -19,6 +19,7 @@
 package pw.phylame.qaf.core
 
 import java.net.URL
+import java.nio.charset.Charset
 import java.util.*
 import kotlin.reflect.KProperty
 
@@ -35,13 +36,9 @@ class Delegate<out T>(val m: Map<String, *>, val name: String? = null, val fallb
 
 fun <T> valueOf(m: Map<String, Any>, name: String? = null, fallback: () -> T): Delegate<T> = Delegate(m, name, fallback)
 
-fun fetchLanguages(url: URL): List<String> {
-    val tags = LinkedList<String>()
-    url.openStream().bufferedReader().forEachLine {
+fun URL.lines(charset: Charset = Charsets.UTF_8): Sequence<String> = openStream().bufferedReader(charset).use {
+    it.lineSequence().filter {
         val line = it.trim()
-        if (line.isNotEmpty() && !line.startsWith('#')) {
-            tags.add(line)
-        }
+        line.isNotEmpty() && line.startsWith("#")
     }
-    return tags
 }

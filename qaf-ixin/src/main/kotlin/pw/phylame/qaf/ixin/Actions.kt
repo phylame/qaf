@@ -137,11 +137,11 @@ open class CommandDispatcher(proxies: Array<Any>) : CommandListener {
 
     init {
         for (proxy in proxies) {
-            prepareProxy(proxy)
+            addProxy(proxy)
         }
     }
 
-    private fun prepareProxy(proxy: Any) {
+    fun addProxy(proxy: Any) {
         proxy.javaClass.methods.filter {
             Modifier.isPublic(it.modifiers)
                     && !Modifier.isStatic(it.modifiers)
@@ -155,7 +155,7 @@ open class CommandDispatcher(proxies: Array<Any>) : CommandListener {
         }
     }
 
-    override fun performed(command: String) {
+    override final fun performed(command: String) {
         invocations[command]?.invoke() ?: throw RuntimeException("No such method of proxy for command: $command")
     }
 
