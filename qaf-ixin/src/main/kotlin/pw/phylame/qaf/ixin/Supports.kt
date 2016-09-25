@@ -22,11 +22,13 @@ import pw.phylame.qaf.core.App
 import pw.phylame.ycl.format.Converter
 import pw.phylame.ycl.format.Converters
 import pw.phylame.ycl.io.IOUtils
+import pw.phylame.ycl.log.Log
 import pw.phylame.ycl.util.StringUtils
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.Point
+import java.io.FileReader
 import java.util.*
 import javax.swing.*
 
@@ -98,14 +100,12 @@ object Ixin {
         val defaults = UIManager.getLookAndFeelDefaults()
         for (key in fontKeys) {
             val value = defaults[key]
-            if (value == null) {
-                defaults[key] = font
-            } else if (value is Font) {
-                defaults[key] = font.deriveFont(value.style)
-            } else if (value is UIDefaults.ActiveValue) {
-                defaults[key] = font.deriveFont((value.createValue(defaults) as Font).style)
-            } else if (value is UIDefaults.LazyValue) {
-                defaults[key] = font.deriveFont((value.createValue(defaults) as Font).style)
+            defaults[key] = when (value) {
+                null -> font
+                is Font -> font.deriveFont(value.style)
+                is UIDefaults.ActiveValue -> font.deriveFont((value.createValue(defaults) as Font).style)
+                is UIDefaults.LazyValue -> font.deriveFont((value.createValue(defaults) as Font).style)
+                else -> throw RuntimeException("unknown value for key $key")
             }
         }
     }

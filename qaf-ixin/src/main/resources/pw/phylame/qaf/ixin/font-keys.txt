@@ -4,7 +4,7 @@ TextField.font
 PasswordField.font
 FormattedTextField.font
 EditorPane.font
-Group.font
+Menu.font
 MenuBar.font
 PopupMenu.font
 PopupMenuSeparator.font
