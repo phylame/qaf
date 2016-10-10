@@ -32,7 +32,7 @@ var JToolBar.isLocked: Boolean get() = !isFloatable
 
 class StatusBar : JPanel(BorderLayout()) {
     companion object {
-        var border = 2
+        var borderSize = 2
     }
 
     val label: JLabel = JLabel()
@@ -44,7 +44,8 @@ class StatusBar : JPanel(BorderLayout()) {
         }
 
     init {
-        label.border = BorderFactory.createEmptyBorder(0, StatusBar.border, 0, 0)
+        label.border = BorderFactory.createEmptyBorder(0, borderSize, 0, 0)
+        add(JSeparator(), BorderLayout.PAGE_START)
         add(label, BorderLayout.LINE_START)
     }
 
