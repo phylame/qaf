@@ -22,13 +22,11 @@ import pw.phylame.qaf.core.App
 import pw.phylame.ycl.format.Converter
 import pw.phylame.ycl.format.Converters
 import pw.phylame.ycl.io.IOUtils
-import pw.phylame.ycl.log.Log
 import pw.phylame.ycl.util.StringUtils
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.Point
-import java.io.FileReader
 import java.util.*
 import javax.swing.*
 
@@ -51,12 +49,6 @@ object Ixin {
         "System" -> UIManager.getSystemLookAndFeelClassName()
         "Java" -> UIManager.getCrossPlatformLookAndFeelClassName()
         else -> name
-    }
-
-    init {
-        for (feel in UIManager.getInstalledLookAndFeels()) {
-            themes[feel.name] = feel.className
-        }
     }
 
     @Suppress("unchecked_cast")
@@ -87,7 +79,7 @@ object Ixin {
         }
     }
 
-    val fontKeys by lazy {
+    private val fontKeys by lazy {
         val keys = LinkedList<String>()
         IOUtils.openResource(FONT_KEY_PATH, Ixin::class.java.classLoader)?.bufferedReader()?.forEachLine {
             keys.add(it.trim())
@@ -108,6 +100,13 @@ object Ixin {
                 else -> throw RuntimeException("unknown value for key $key")
             }
         }
+    }
+
+    fun initIxin(antiAliasing: Boolean, decorated: Boolean, theme: String, font: Font) {
+        setAntiAliasing(antiAliasing)
+        setWindowDecorated(decorated)
+        setLafTheme(theme)
+        setGlobalFont(font)
     }
 
     data class MnemonicTuple(val name: String, val mnemonic: Int, val index: Int) {
@@ -148,10 +147,14 @@ object Ixin {
         return str
     }
 
-
     init {
+        for (feel in UIManager.getInstalledLookAndFeels()) {
+            themes[feel.name] = feel.className
+        }
+        mnemonicEnable = isMnemonicSupport
+
         // register converter for UI objects
-        Converters.set(Point::class.java, object : Converter<Point> {
+        Converters.register(Point::class.java, object : Converter<Point> {
             override fun parse(str: String): Point {
                 val pair = StringUtils.partition(str, '-')
                 return Point(Integer.decode(pair.first.trim()), Integer.decode(pair.second.trim()))
@@ -160,7 +163,7 @@ object Ixin {
             override fun render(o: Point): String = "${o.x}-${o.y}"
         })
 
-        Converters.set(Dimension::class.java, object : Converter<Dimension> {
+        Converters.register(Dimension::class.java, object : Converter<Dimension> {
             override fun parse(str: String): Dimension {
                 val pair = StringUtils.partition(str, '-')
                 return Dimension(Integer.decode(pair.first.trim()), Integer.decode(pair.second.trim()))
@@ -169,7 +172,7 @@ object Ixin {
             override fun render(o: Dimension): String = "${o.width}-${o.height}"
         })
 
-        Converters.set(Font::class.java, object : Converter<Font> {
+        Converters.register(Font::class.java, object : Converter<Font> {
             override fun parse(str: String): Font = Font.decode(str)
 
             override fun render(o: Font): String {
@@ -184,7 +187,7 @@ object Ixin {
             }
         })
 
-        Converters.set(Color::class.java, object : Converter<Color> {
+        Converters.register(Color::class.java, object : Converter<Color> {
             override fun parse(str: String): Color = Color.decode(str)
 
             override fun render(o: Color): String = "#%X".format(o.rgb).substring(2)

@@ -35,32 +35,24 @@ class Resource(dir: String,
 
     val baseDir = if (dir.endsWith('/')) dir else dir + '/'
 
-    fun iconFor(name: String, suffix: String = ""): Icon? {
-        val path = gfxDir + '/' + normalize(name, suffix)
-        var icon = icons[path]
-        if (icon != null) {
-            return icon
+    private fun <T> resourceFor(dir: String, name: String, suffix: String, cache: MutableMap<String, T>, creator: (URL) -> T): T? {
+        val path = dir + '/' + normalize(name, suffix)
+        var resource = cache[path]
+        if (resource != null) {
+            return resource
         }
         val url = itemFor(path)
         if (url != null) {
-            icon = ImageIcon(url)
-            icons[path] = icon
+            resource = creator(url)
+            cache[path] = resource
         }
-        return icon
+        return resource
     }
 
-    fun imageFor(name: String, suffix: String = ""): Image? {
-        val path = gfxDir + '/' + normalize(name, suffix)
-        var image = images[path]
-        if (image != null) {
-            return image
-        }
-        val url = itemFor(path)
-        if (url != null) {
-            image = Toolkit.getDefaultToolkit().getImage(url)
-            images[path] = image
-        }
-        return image
+    fun iconFor(name: String, suffix: String = ""): Icon? = resourceFor(gfxDir, name, suffix, icons, ::ImageIcon)
+
+    fun imageFor(name: String, suffix: String = ""): Image? = resourceFor(gfxDir, name, suffix, images) {
+        Toolkit.getDefaultToolkit().getImage(it)
     }
 
     fun translatorFor(name: String, locale: Locale = Locale.getDefault()): Translator =

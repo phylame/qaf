@@ -70,7 +70,8 @@ interface Designer {
 class BadDesignerException(message: String) : Exception(message)
 
 open class JSONDesigner(input: InputStream) : Designer {
-    constructor(path: String) : this(Ixin.myDelegate.resource.itemFor(path)?.openStream()
+    constructor(path: String) : this(Ixin.myDelegate.resource.itemFor(path)
+            ?.openStream()
             ?: throw BadDesignerException("Not found designer in resource: $path"))
 
     companion object {
