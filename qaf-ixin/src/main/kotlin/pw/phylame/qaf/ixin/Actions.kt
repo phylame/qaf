@@ -42,7 +42,7 @@ var Action.isSelected: Boolean get() = getValue(Action.SELECTED_KEY) as? Boolean
 
 abstract class IAction(id: String,
                        translator: Localizable = App,
-                       resource: Resource = Ixin.myDelegate.resource) : AbstractAction() {
+                       resource: Resource = Ixin.delegate.resource) : AbstractAction() {
     companion object {
         const val SELECTED_ICON_KEY = "IxinSelectedIcon"
 
@@ -108,7 +108,7 @@ abstract class IAction(id: String,
 
 class IgnoredAction(id: String,
                     translator: Localizable = App,
-                    resource: Resource = Ixin.myDelegate.resource) : IAction(id, translator, resource) {
+                    resource: Resource = Ixin.delegate.resource) : IAction(id, translator, resource) {
     override fun actionPerformed(e: ActionEvent) {
         // do nothing
     }
@@ -117,7 +117,7 @@ class IgnoredAction(id: String,
 class DispatcherAction(id: String,
                        val listener: CommandListener,
                        translator: Localizable = App,
-                       resource: Resource = Ixin.myDelegate.resource) : IAction(id, translator, resource) {
+                       resource: Resource = Ixin.delegate.resource) : IAction(id, translator, resource) {
     override fun actionPerformed(e: ActionEvent) {
         listener.performed(e.actionCommand)
     }

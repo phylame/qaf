@@ -50,14 +50,14 @@ object Separator : Item("__SEPARATOR__")
 fun MutableMap<String, Action>.actionFor(item: Item,
                                          listener: CommandListener? = null,
                                          translator: Localizable = App,
-                                         resource: Resource = Ixin.myDelegate.resource): Action = getOrPut(item.id) {
+                                         resource: Resource = Ixin.delegate.resource): Action = getOrPut(item.id) {
     item.asAction(listener ?: throw IllegalArgumentException("create action require listener"), translator, resource)
 }
 
 fun MutableMap<String, Action>.actionFor(id: String,
                                          listener: CommandListener? = null,
                                          translator: Localizable = App,
-                                         resource: Resource = Ixin.myDelegate.resource): Action
+                                         resource: Resource = Ixin.delegate.resource): Action
         = actionFor(Item(id), listener, translator, resource)
 
 interface Designer {
@@ -66,11 +66,10 @@ interface Designer {
     val toolbar: Array<Item>?
 }
 
-
 class BadDesignerException(message: String) : Exception(message)
 
 open class JSONDesigner(input: InputStream) : Designer {
-    constructor(path: String) : this(Ixin.myDelegate.resource.itemFor(path)
+    constructor(path: String) : this(Ixin.delegate.resource.itemFor(path)
             ?.openStream()
             ?: throw BadDesignerException("Not found designer in resource: $path"))
 
@@ -140,7 +139,7 @@ open class JSONDesigner(input: InputStream) : Designer {
 
 fun Item.asAction(listener: CommandListener,
                   translator: Localizable = App,
-                  resource: Resource = Ixin.myDelegate.resource): Action {
+                  resource: Resource = Ixin.delegate.resource): Action {
     require(id != "") { "empty id is only for separator" }
     require(this !is Group) { "group cannot be create as dispatcher action" }
     val action = DispatcherAction(id, listener, translator, resource)
@@ -149,13 +148,13 @@ fun Item.asAction(listener: CommandListener,
     return action
 }
 
-fun Group.asMenu(translator: Localizable = App, resource: Resource = Ixin.myDelegate.resource): JMenu {
+fun Group.asMenu(translator: Localizable = App, resource: Resource = Ixin.delegate.resource): JMenu {
     val menu = JMenu(IgnoredAction(id, translator, resource))
     menu.toolTipText = null
     return menu
 }
 
-fun Action.asMenuItem(style: Style, form: Form? = null): JMenuItem {
+fun Action.asMenuItem(style: Style, form: IForm? = null): JMenuItem {
     val item = when (style) {
         Style.PLAIN -> JMenuItem(this)
         Style.CHECK -> JCheckBoxMenuItem(this)
@@ -168,7 +167,7 @@ fun Action.asMenuItem(style: Style, form: Form? = null): JMenuItem {
     return item
 }
 
-fun Action.asButton(style: Style, form: Form? = null): AbstractButton {
+fun Action.asButton(style: Style, form: IForm? = null): AbstractButton {
     val button: AbstractButton = when (style) {
         Style.PLAIN -> JButton(this)
         Style.CHECK -> JCheckBox(this)
@@ -192,8 +191,8 @@ fun <T : JMenu> T.addItems(items: Array<Item>,
                            actions: MutableMap<String, Action>,
                            listener: CommandListener? = null,
                            translator: Localizable = App,
-                           resource: Resource = Ixin.myDelegate.resource,
-                           form: Form? = null): T {
+                           resource: Resource = Ixin.delegate.resource,
+                           form: IForm? = null): T {
     popupMenu.addItems(items, actions, listener, translator, resource, form)
     return this
 }
@@ -202,8 +201,8 @@ fun <T : JPopupMenu> T.addItems(items: Array<out Item>,
                                 actions: MutableMap<String, Action>,
                                 listener: CommandListener? = null,
                                 translator: Localizable = App,
-                                resource: Resource = Ixin.myDelegate.resource,
-                                form: Form? = null): T {
+                                resource: Resource = Ixin.delegate.resource,
+                                form: IForm? = null): T {
     var group: ButtonGroup? = null
     for (item in items) {
         val comp: JComponent = when (item) {
@@ -253,8 +252,8 @@ fun <T : JToolBar> T.addItems(items: Array<out Any>,
                               actions: MutableMap<String, Action>,
                               listener: CommandListener? = null,
                               translator: Localizable = App,
-                              resource: Resource = Ixin.myDelegate.resource,
-                              form: Form? = null): T {
+                              resource: Resource = Ixin.delegate.resource,
+                              form: IForm? = null): T {
     var group: ButtonGroup? = null
     for (item in items) {
         when (item) {

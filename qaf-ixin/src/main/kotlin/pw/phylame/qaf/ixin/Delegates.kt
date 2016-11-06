@@ -20,6 +20,7 @@ package pw.phylame.qaf.ixin
 
 import pw.phylame.qaf.core.AppDelegate
 import pw.phylame.qaf.core.Plugin
+import pw.phylame.qaf.core.tr
 import java.awt.Image
 import java.net.URL
 import java.util.*
@@ -33,7 +34,7 @@ interface IPlugin : Plugin {
     fun performUI()
 }
 
-abstract class IxinDelegate<F : Form> : AppDelegate, CommandListener {
+abstract class IDelegate<F : IForm> : AppDelegate, CommandListener {
 
     lateinit var proxy: CommandListener
         protected set
@@ -75,8 +76,14 @@ abstract class IxinDelegate<F : Form> : AppDelegate, CommandListener {
     private val plugins = LinkedHashSet<IPlugin>()
 }
 
-fun iconFor(name: String, suffix: String = ""): Icon? = Ixin.myDelegate.resource.iconFor(name, suffix)
+fun iconFor(name: String, suffix: String = ""): Icon? = Ixin.delegate.resource.iconFor(name, suffix)
 
-fun imageFor(name: String, suffix: String = ""): Image? = Ixin.myDelegate.resource.imageFor(name, suffix)
+fun localizedIconFor(id: String, suffix: String = ""): Icon? = Ixin.delegate.resource.iconFor(tr(id), suffix)
 
-fun fileFor(name: String, suffix: String = ""): URL? = Ixin.myDelegate.resource.itemFor(name, suffix)
+fun imageFor(name: String, suffix: String = ""): Image? = Ixin.delegate.resource.imageFor(name, suffix)
+
+fun localizedImageFor(id: String, suffix: String = ""): Image? = Ixin.delegate.resource.imageFor(tr(id), suffix)
+
+fun fileFor(name: String, suffix: String = ""): URL? = Ixin.delegate.resource.itemFor(name, suffix)
+
+fun localizedFileFor(id: String, suffix: String = ""): URL? = Ixin.delegate.resource.itemFor(tr(id), suffix)

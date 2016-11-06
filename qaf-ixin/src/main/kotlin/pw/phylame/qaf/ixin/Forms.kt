@@ -27,24 +27,51 @@ import java.awt.Toolkit
 import java.util.*
 import javax.swing.*
 
-open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) {
+class IStatusBar : JPanel(BorderLayout()) {
+    companion object {
+        var borderSize = 2
+    }
+
+    val label: JLabel = JLabel()
+
+    var text: String get() = label.text
+        set (value) {
+            previous = value
+            label.text = value
+        }
+
+    init {
+        label.border = BorderFactory.createEmptyBorder(0, borderSize, 0, 0)
+        add(JSeparator(), BorderLayout.PAGE_START)
+        add(label, BorderLayout.LINE_START)
+    }
+
+    fun perform(text: String) {
+        label.text = text
+    }
+
+    fun reset() {
+        label.text = previous
+    }
+
+    // previous text
+    private var previous: String? = null
+}
+
+open class IForm(title: String = "", val snap: Settings? = null) : JFrame(title) {
     val actions = HashMap<String, Action>()
 
     var toolBar: JToolBar? = null
 
-    var statusBar: StatusBar? = null
+    var statusBar: IStatusBar? = null
 
     var statusText: String get() = statusBar?.text ?: ""
         set(value) {
             statusBar?.text = value
         }
 
-    init {
-        init()
-    }
-
     protected fun createComponents(designer: Designer, listener: CommandListener? = null) {
-        val delegate = Ixin.myDelegate
+        val delegate = Ixin.delegate
         val _listener = listener ?: delegate
         val translator = App
         val resource = delegate.resource
@@ -59,18 +86,12 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
         contentPane.add(statusBar, BorderLayout.PAGE_END)
     }
 
-    open fun init() {
-        restoreStatus()
-    }
-
     open fun destroy() {
         saveStatus()
     }
 
     open protected fun restoreStatus() {
-        if (snap == null) {
-            return
-        }
+        val snap = this.snap ?: return
         val toolbar = toolBar
         if (toolbar != null) {
             toolbar.isVisible = snap[TOOL_BAR_VISIBLE] ?: true
@@ -86,9 +107,7 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
     }
 
     open protected fun saveStatus() {
-        if (snap == null) {
-            return
-        }
+        val snap = this.snap ?: return
         snap[FORM_LOCATION] = location
         snap[FORM_DIMENSION] = size
         val toolbar = toolBar
@@ -101,7 +120,7 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
     }
 
     fun createPopupMenu(items: Array<Item>, label: String = ""): JPopupMenu =
-            JPopupMenu(label).addItems(items, actions, Ixin.myDelegate, form = this)
+            JPopupMenu(label).addItems(items, actions, Ixin.delegate, form = this)
 
     operator fun Action.unaryPlus() {
         val cmd: String? = this[Action.ACTION_COMMAND_KEY]
@@ -127,7 +146,7 @@ open class Form(title: String = "", val snap: Settings? = null) : JFrame(title) 
     }
 
     private fun createStatusBar() {
-        statusBar = StatusBar()
+        statusBar = IStatusBar()
     }
 
     companion object {

@@ -22,6 +22,7 @@ import pw.phylame.qaf.core.App
 import pw.phylame.ycl.format.Converter
 import pw.phylame.ycl.format.Converters
 import pw.phylame.ycl.io.IOUtils
+import pw.phylame.ycl.log.Log
 import pw.phylame.ycl.util.StringUtils
 import java.awt.Color
 import java.awt.Dimension
@@ -33,62 +34,100 @@ import javax.swing.*
 fun Dimension.scaleWith(rate: Double): Dimension = Dimension((width * rate).toInt(), (height * rate).toInt())
 
 object Ixin {
-    const val DEFAULT_THEME_NAME = "Default"
-    const val FONT_KEY_PATH = "!pw/phylame/qaf/ixin/font-keys.txt"
+    const val DEFAULT_THEME = "Default"
+    const val SYSTEM_THEME = "System"
+    const val JAVA_THEME = "Java"
+    const val FONTS_KEY_PATH = "!pw/phylame/qaf/ixin/font-keys.txt"
     const val MNEMONIC_PREFIX = '&'
-
-    var mnemonicEnable = true
 
     val isMnemonicSupport by lazy {
         "mac" !in System.getProperty("os.name")
     }
 
+    var isMnemonicEnable = isMnemonicSupport
+
+    fun init(antiAliasing: Boolean, decorated: Boolean, theme: String, font: Font?) {
+        isAntiAliasing = antiAliasing
+        isWindowDecorated = decorated
+        lafTheme = theme
+        globalFont = font
+    }
+
     val themes = HashMap<String, String>()
 
     fun themeFor(name: String): String = themes[name] ?: when (name) {
-        "System" -> UIManager.getSystemLookAndFeelClassName()
-        "Java" -> UIManager.getCrossPlatformLookAndFeelClassName()
+        DEFAULT_THEME -> UIManager.getLookAndFeel().javaClass.name
+        SYSTEM_THEME -> UIManager.getSystemLookAndFeelClassName()
+        JAVA_THEME -> UIManager.getCrossPlatformLookAndFeelClassName()
         else -> name
     }
 
     @Suppress("unchecked_cast")
-    val myDelegate: IxinDelegate<*> get() = if (App.delegate is IxinDelegate<*>)
-        App.delegate as IxinDelegate<*>
-    else throw IllegalStateException("App should run with IxinDelegate")
+    val delegate: IDelegate<*> get() = if (App.delegate is IDelegate<*>)
+        App.delegate as IDelegate<*>
+    else throw IllegalStateException("App should run with IDelegate")
 
     // 1
-    fun setAntiAliasing(enable: Boolean) {
+    var isAntiAliasing: Boolean = false
+        set(value) {
+            updateAntiAliasing(value)
+            field = value
+        }
+
+    fun updateAntiAliasing(enable: Boolean) {
         System.setProperty("awt.useSystemAAFontSettings", if (enable) "on" else "off")
         System.setProperty("swing.aatext", enable.toString())
     }
 
     // 2
-    fun setWindowDecorated(decorated: Boolean) {
-        JDialog.setDefaultLookAndFeelDecorated(decorated)
-        JFrame.setDefaultLookAndFeelDecorated(decorated)
+    var isWindowDecorated: Boolean = false
+        set(value) {
+            updateWindowDecorated(value)
+            field = value
+        }
+
+    fun updateWindowDecorated(enable: Boolean) {
+        JDialog.setDefaultLookAndFeelDecorated(enable)
+        JFrame.setDefaultLookAndFeelDecorated(enable)
     }
 
     // 3
-    fun setLafTheme(name: String) {
-        if (name.isNotEmpty() && name != DEFAULT_THEME_NAME) {
+    var lafTheme: String = DEFAULT_THEME
+        set(value) {
+            updateLafTheme(value)
+            field = value
+        }
+
+    fun updateLafTheme(name: String) {
+        if (name.isNotEmpty()) {
             try {
                 UIManager.setLookAndFeel(themeFor(name))
             } catch (e: Exception) {
                 throw RuntimeException("cannot set to new laf: $name", e)
             }
+        } else {
+            Log.d("Ixin", "empty laf theme specified")
         }
     }
 
+    // 4
+    var globalFont: Font? = null
+        set(value) {
+            if (value != null) {
+                updateGlobalFont(value)
+            }
+            field = value
+        }
+
     private val fontKeys by lazy {
         val keys = LinkedList<String>()
-        IOUtils.openResource(FONT_KEY_PATH, Ixin::class.java.classLoader)?.bufferedReader()?.forEachLine {
+        IOUtils.openResource(FONTS_KEY_PATH, Ixin::class.java.classLoader)?.bufferedReader()?.forEachLine {
             keys.add(it.trim())
         }
         keys
     }
 
-    // 4
-    fun setGlobalFont(font: Font) {
+    fun updateGlobalFont(font: Font) {
         val defaults = UIManager.getLookAndFeelDefaults()
         for (key in fontKeys) {
             val value = defaults[key]
@@ -102,15 +141,8 @@ object Ixin {
         }
     }
 
-    fun initIxin(antiAliasing: Boolean, decorated: Boolean, theme: String, font: Font) {
-        setAntiAliasing(antiAliasing)
-        setWindowDecorated(decorated)
-        setLafTheme(theme)
-        setGlobalFont(font)
-    }
-
     data class MnemonicTuple(val name: String, val mnemonic: Int, val index: Int) {
-        val isEnable: Boolean get() = mnemonicEnable && mnemonic != 0
+        val isEnable: Boolean get() = isMnemonicEnable && mnemonic != 0
     }
 
     fun mnemonicOf(name: String): MnemonicTuple {
@@ -151,7 +183,6 @@ object Ixin {
         for (feel in UIManager.getInstalledLookAndFeels()) {
             themes[feel.name] = feel.className
         }
-        mnemonicEnable = isMnemonicSupport
 
         // register converter for UI objects
         Converters.register(Point::class.java, object : Converter<Point> {

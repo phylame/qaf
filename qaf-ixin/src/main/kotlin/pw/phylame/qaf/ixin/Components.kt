@@ -19,47 +19,10 @@
 package pw.phylame.qaf.ixin
 
 import pw.phylame.ycl.util.Provider
-import java.awt.BorderLayout
-import java.awt.Component
+import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.*
-
-var JToolBar.isLocked: Boolean get() = !isFloatable
-    set(value) {
-        isFloatable = !value
-    }
-
-class StatusBar : JPanel(BorderLayout()) {
-    companion object {
-        var borderSize = 2
-    }
-
-    val label: JLabel = JLabel()
-
-    var text: String get() = label.text
-        set (value) {
-            previous = value
-            label.text = value
-        }
-
-    init {
-        label.border = BorderFactory.createEmptyBorder(0, borderSize, 0, 0)
-        add(JSeparator(), BorderLayout.PAGE_START)
-        add(label, BorderLayout.LINE_START)
-    }
-
-    fun perform(text: String) {
-        label.text = text
-    }
-
-    fun reset() {
-        label.text = previous
-    }
-
-    // previous text
-    private var previous: String? = null
-}
 
 fun mnemonicLabel(text: String): JLabel {
     val result = Ixin.mnemonicOf(text)
@@ -71,7 +34,38 @@ fun mnemonicLabel(text: String): JLabel {
     return label
 }
 
-var <T : JToolBar> T.isTextHidden: Boolean get() = components.any { it is AbstractButton && it.hideActionText }
+
+fun <T : Component> T.performOn(form: IForm, provider: Provider<String>): T {
+    addMouseListener(StatusPerformer(provider, form))
+    return this
+}
+
+fun <T : Component> T.performOn(form: IForm, text: String): T = performOn(form, Provider { text })
+
+fun <T : Component> T.performOn(form: IForm, action: Action): T = performOn(form, Provider {
+    action[Action.LONG_DESCRIPTION] ?: ""
+})
+
+fun Component.labelled(text: String): JLabel {
+    val label = mnemonicLabel(text)
+    label.labelFor = this
+    return label
+}
+
+val Component?.window: Window get() = if (this == null) {
+    JOptionPane.getRootFrame()
+} else if (this is Frame || this is Dialog) {
+    this as Window
+} else {
+    parent.window
+}
+
+var JToolBar.isLocked: Boolean get() = !isFloatable
+    set(value) {
+        isFloatable = !value
+    }
+
+var JToolBar.isTextHidden: Boolean get() = components.any { it is AbstractButton && it.hideActionText }
     set(value) {
         components.forEach {
             if (it is AbstractButton) {
@@ -80,49 +74,121 @@ var <T : JToolBar> T.isTextHidden: Boolean get() = components.any { it is Abstra
         }
     }
 
-fun Component.withLabel(text: String): JLabel {
-    val label = mnemonicLabel(text)
-    label.labelFor = this
-    return label
+fun alignedPane(alignment: Int, space: Int, vararg components: Component?): JPanel? = if (components.isEmpty()) {
+    null
+} else {
+    alignedPane(alignment, BoxLayout.LINE_AXIS, space, *components)
 }
 
-fun alignedPane(alignment: Int, space: Int, vararg components: Component): JPanel? {
+fun alignedPane(alignment: Int, axis: Int, space: Int, vararg components: Component?): JPanel? {
     if (components.isEmpty()) {
         return null
     }
-
     val pane = JPanel()
-    pane.layout = BoxLayout(pane, BoxLayout.LINE_AXIS)
-
-    if (alignment != -1 && alignment != SwingConstants.LEFT) {
-        pane.add(Box.createHorizontalGlue())
-    }
-
-    val end = components.size - 1
-    for (ix in 0..end - 1) {
-        pane.add(components[ix])
-        pane.add(Box.createHorizontalStrut(space))
-    }
-    pane.add(components[end])
-
-    if (alignment != -1 && alignment != SwingConstants.RIGHT) {
-        pane.add(Box.createHorizontalGlue())
-    }
+    addAlignedComponents(pane, alignment, axis, space, *components)
     return pane
 }
 
-fun <T : Component> T.performOn(form: Form, provider: Provider<String>): T {
-    addMouseListener(StatusPerformer(provider, form))
-    return this
+// alignment: -1 for customizing
+fun addAlignedComponents(panel: JPanel, alignment: Int, axis: Int, space: Int, vararg components: Component?) {
+    if (components.isEmpty()) {
+        return
+    }
+
+    panel.layout = BoxLayout(panel, axis)
+    val hAxis = axis == BoxLayout.LINE_AXIS || axis == BoxLayout.X_AXIS
+    if (alignment != -1) {
+        if (hAxis) {
+            if (alignment != SwingConstants.LEFT) {
+                panel.add(Box.createHorizontalGlue())
+            }
+        } else if (alignment != SwingConstants.TOP) {
+            panel.add(Box.createVerticalGlue())
+        }
+    }
+
+    val rigid = if (hAxis) Dimension(space, 0) else Dimension(0, space)
+
+    val end = components.size - 1
+    for (ix in 0..end - 1) {
+        panel.add(components[ix])
+        panel.add(Box.createRigidArea(rigid))
+    }
+    panel.add(components[end])
+
+    if (alignment != -1) {
+        if (hAxis) {
+            if (alignment != SwingConstants.RIGHT) {
+                panel.add(Box.createHorizontalGlue())
+            }
+        } else if (alignment != SwingConstants.BOTTOM) {
+            panel.add(Box.createVerticalGlue())
+        }
+    }
 }
 
-fun <T : Component> T.performOn(form: Form, text: String): T = performOn(form, Provider { text })
+fun groupedPane(rows: Int, columns: Int, hSpace: Int, vSpace: Int, vararg components: Component?): JPanel? {
+    if (components.isEmpty()) {
+        return null
+    }
+    val pane = JPanel()
+    addGroupedComponents(pane, rows, columns, hSpace, vSpace, *components)
+    return pane
+}
 
-fun <T : Component> T.performOn(form: Form, action: Action): T = performOn(form, Provider {
-    action[Action.LONG_DESCRIPTION] ?: ""
-})
+fun addGroupedComponents(panel: JPanel, rows: Int, columns: Int, hSpace: Int, vSpace: Int, vararg components: Component?) {
+    if (components.size == 0) {
+        return
+    }
 
-private class StatusPerformer(val provider: Provider<String>, val form: Form) : MouseAdapter() {
+    val layout = GroupLayout(panel)
+    panel.layout = layout
+
+    val hGroup = layout.createSequentialGroup()
+    var group: GroupLayout.ParallelGroup
+    var item: Component?
+    var index: Int
+    for (column in 0..columns - 1) {
+        group = layout.createParallelGroup()
+        for (row in 0..rows - 1) {
+            index = row * columns + column
+            item = components[index]
+            if (item != null) {
+                group.addComponent(item)
+                if (row != rows - 1) {
+                    group.addGap(vSpace)
+                }
+            }
+        }
+        hGroup.addGroup(group)
+        if (column != columns - 1) {
+            hGroup.addGap(hSpace)
+        }
+    }
+    layout.setHorizontalGroup(hGroup)
+
+    val vGroup = layout.createSequentialGroup()
+    for (row in 0..rows - 1) {
+        group = layout.createParallelGroup(GroupLayout.Alignment.CENTER)
+        for (column in 0..columns - 1) {
+            item = components[row * columns + column]
+            if (item != null) {
+                group.addComponent(item)
+                if (column != columns - 1) {
+                    group.addGap(hSpace)
+                }
+            }
+        }
+        vGroup.addGroup(group)
+        if (row != rows - 1) {
+            vGroup.addGap(vSpace)
+        }
+    }
+
+    layout.setVerticalGroup(vGroup)
+}
+
+private class StatusPerformer(val provider: Provider<String>, val form: IForm) : MouseAdapter() {
     private var closed = true
 
     override fun mouseEntered(e: MouseEvent) {

@@ -18,6 +18,8 @@
 
 package pw.phylame.qaf.core
 
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.net.URL
 import java.nio.charset.Charset
 import java.util.*
@@ -28,6 +30,12 @@ fun <K, V> MutableMap<K, V>.put(pair: Pair<K, V>): V? = put(pair.first, pair.sec
 fun <K, V> MutableMap<K, V>.put(entry: Map.Entry<K, V>): V? = put(entry.key, entry.value)
 
 fun <T> T.iif(cond: Boolean, ok: (T) -> T): T = if (cond) ok(this) else this
+
+fun Throwable.dumpToString(): String {
+    val sw = StringWriter()
+    printStackTrace(PrintWriter(sw))
+    return sw.toString()
+}
 
 class Delegate<out T>(val m: Map<String, *>, val name: String? = null, val fallback: () -> T) {
     @Suppress("unchecked_cast")
