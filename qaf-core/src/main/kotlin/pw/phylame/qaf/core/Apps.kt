@@ -48,7 +48,7 @@ interface AppDelegate : Runnable {
      * Does tasks when quitting app.
      */
     fun onQuit() {
-        App.plugins.values.forEach { it.destroy() }
+        App.plugins.values.forEach(Plugin::destroy)
         App.cleanups.forEach { it.run() }
     }
 }
@@ -117,6 +117,9 @@ object App : Localizable {
                 }
             } catch (e: ClassNotFoundException) {
                 Log.e(TAG, "not found plugin in \"$path\"")
+            } catch (e: Throwable) {
+                error("failed to load plugin: $path", e)
+                Log.e(TAG, e)
             }
         }
     }
@@ -133,7 +136,7 @@ object App : Localizable {
 
     var debug = Debug.ECHO
 
-    private fun traceback(e: Exception, debug: Debug) {
+    private fun traceback(e: Throwable, debug: Debug) {
         when (debug) {
             Debug.ECHO -> println(e.message)
             Debug.TRACE -> e.printStackTrace()
@@ -146,11 +149,11 @@ object App : Localizable {
         System.err.println("${assembly.name}: $msg")
     }
 
-    fun error(msg: Any, e: Exception) {
+    fun error(msg: Any, e: Throwable) {
         error(msg, e, debug)
     }
 
-    fun error(msg: Any, e: Exception, debug: Debug) {
+    fun error(msg: Any, e: Throwable, debug: Debug) {
         error(msg)
         traceback(e, debug)
     }
@@ -160,11 +163,11 @@ object App : Localizable {
         exit(-1)
     }
 
-    fun die(msg: Any, e: Exception): Nothing {
+    fun die(msg: Any, e: Throwable): Nothing {
         die(msg, e, debug)
     }
 
-    fun die(msg: Any, e: Exception, debug: Debug): Nothing {
+    fun die(msg: Any, e: Throwable, debug: Debug): Nothing {
         error(msg)
         traceback(e, debug)
         exit(-1)
