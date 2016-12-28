@@ -66,6 +66,11 @@ abstract class IDelegate<F : IForm> : AppDelegate, CommandListener {
     private fun initUI() {
         form = createForm()
         plugins.forEach { it.performUI() }
+        onReady()
+    }
+
+    open protected fun onReady() {
+
     }
 
     override fun onQuit() {

@@ -36,9 +36,9 @@ interface Localizable {
 
     fun tr(key: String): String = get(key)
 
-    fun tr(key: String, vararg args: Any): String = format(get(key), args)
+    fun tr(key: String, vararg args: Any?): String = format(get(key), args)
 
-    fun format(pattern: String, args: Array<out Any>): String = MessageFormat.format(pattern, *args)
+    fun format(pattern: String, args: Array<out Any?>): String = MessageFormat.format(pattern, *args)
 }
 
 class Translator private constructor(val bundle: ResourceBundle) : Localizable {

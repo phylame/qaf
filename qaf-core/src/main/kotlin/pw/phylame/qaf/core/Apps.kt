@@ -197,4 +197,4 @@ object App : Localizable {
 
 fun tr(key: String): String = App.tr(key)
 
-fun tr(key: String, vararg args: Any): String = App.tr(key, *args)
+fun tr(key: String, vararg args: Any?): String = App.tr(key, *args)
