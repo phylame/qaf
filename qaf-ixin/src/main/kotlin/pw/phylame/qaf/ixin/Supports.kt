@@ -187,7 +187,7 @@ object Ixin {
         // register converter for UI objects
         Converters.register(Point::class.java, object : Converter<Point> {
             override fun parse(str: String): Point {
-                val pair = StringUtils.partition(str, '-')
+                val pair = StringUtils.partition(str, "-")
                 return Point(Integer.decode(pair.first.trim()), Integer.decode(pair.second.trim()))
             }
 
@@ -196,7 +196,7 @@ object Ixin {
 
         Converters.register(Dimension::class.java, object : Converter<Dimension> {
             override fun parse(str: String): Dimension {
-                val pair = StringUtils.partition(str, '-')
+                val pair = StringUtils.partition(str, "-")
                 return Dimension(Integer.decode(pair.first.trim()), Integer.decode(pair.second.trim()))
             }
 
