@@ -24,6 +24,7 @@ import java.io.File
 import java.io.InputStream
 import java.util.*
 
+
 const val PLUGIN_CONFIG_KEY = "qaf.config.path"
 const val DEFAULT_CONFIG_PATH = "META-INF/qaf/plugin.prop"
 const val CUSTOMIZED_HOME_KEY = "qaf.home.path"
@@ -61,6 +62,26 @@ interface Plugin {
     fun init()
 
     fun destroy()
+}
+
+data class Metadata(val id: String, val name: String, val version: String, val vendor: String) {
+    fun toMap(): Map<String, Any> {
+        return mapOf("name" to name, "version" to version, "vendor" to vendor)
+    }
+}
+
+abstract class AbstractPlugin(private val metadata: Metadata) : Plugin {
+    val app = App
+
+    override val id: String get() = metadata.id
+
+    override val meta: Map<String, Any> get() = metadata.toMap()
+
+    override fun destroy() {
+
+    }
+
+    override fun toString(): String = "${javaClass.simpleName}[id=$id, meta=$meta]"
 }
 
 object App : Localizable {

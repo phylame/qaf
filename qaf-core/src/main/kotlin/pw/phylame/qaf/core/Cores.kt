@@ -18,7 +18,7 @@
 
 package pw.phylame.qaf.core
 
-import pw.phylame.ycl.io.IOUtils
+import pw.phylame.ycl.util.MiscUtils
 import java.text.MessageFormat
 import java.util.*
 
@@ -42,8 +42,8 @@ interface Localizable {
 }
 
 class Translator private constructor(val bundle: ResourceBundle) : Localizable {
-    constructor(path: String, locale: Locale = Locale.getDefault(), loader: ClassLoader = IOUtils.getContextClassLoader()) :
-    this(ResourceBundle.getBundle(path, locale, loader))
+    constructor(path: String, locale: Locale = Locale.getDefault(), loader: ClassLoader = MiscUtils.getContextClassLoader()) :
+            this(ResourceBundle.getBundle(path, locale, loader))
 
     override fun get(key: String): String = bundle.getString(key)
 }
