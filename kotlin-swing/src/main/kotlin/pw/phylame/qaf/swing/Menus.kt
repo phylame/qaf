@@ -1,3 +1,5 @@
+package pw.phylame.qaf.swing
+
 import javax.swing.*
 
 fun <T : JMenuBar> T.menu(init: JMenu.() -> Unit): JMenu {

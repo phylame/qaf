@@ -1,3 +1,5 @@
+package pw.phylame.qaf.swing
+
 import java.awt.*
 import javax.swing.BoxLayout
 import javax.swing.SpringLayout

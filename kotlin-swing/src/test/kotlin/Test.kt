@@ -1,4 +1,5 @@
 import pw.phylame.qaf.ixin.Ixin
+import pw.phylame.qaf.swing.*
 import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
@@ -7,7 +8,7 @@ import javax.swing.*
 fun main(args: Array<String>) {
     Ixin.init(true, false, "Nimbus", Font("Microsoft YaHei UI", Font.PLAIN, 14))
     val frame = frame {
-        title = "This is a frame"
+        title = "This is a pw.phylame.qaf.swing.frame"
         size = 800 x 450
 
         addWindowListener(object : WindowAdapter() {
