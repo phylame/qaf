@@ -5,6 +5,8 @@ import java.awt.Component
 import java.awt.Container
 import java.awt.event.ActionEvent
 import javax.swing.*
+import javax.swing.border.Border
+import javax.swing.border.CompoundBorder
 
 fun <T : Container> T.panel(adding: Boolean = true, init: JPanel.() -> Unit): JPanel {
     val panel = JPanel()
@@ -52,21 +54,72 @@ fun <T : Container> T.toolBar(adding: Boolean = true, init: JToolBar.() -> Unit)
 }
 
 fun <T : Container> T.label(adding: Boolean = true, init: JLabel.() -> Unit): JLabel {
-    val label = JLabel()
+    val comp = JLabel()
     if (adding) {
-        add(label)
+        add(comp)
     }
-    label.init()
-    return label
+    comp.init()
+    return comp
 }
 
 fun <T : Container> T.button(adding: Boolean = true, init: JButton.() -> Unit): JButton {
-    val button = JButton()
+    val comp = JButton()
     if (adding) {
-        add(button)
+        add(comp)
     }
-    button.init()
-    return button
+    comp.init()
+    return comp
+}
+
+fun <T : Container> T.checkBox(adding: Boolean = true, init: JCheckBox.() -> Unit): JCheckBox {
+    val comp = JCheckBox()
+    if (adding) {
+        add(comp)
+    }
+    comp.init()
+    return comp
+}
+
+fun <T : Container> T.radioButton(adding: Boolean = true, init: JRadioButton.() -> Unit): JRadioButton {
+    val comp = JRadioButton()
+    if (adding) {
+        add(comp)
+    }
+    comp.init()
+    return comp
+}
+
+fun <T : Container> T.buttonGroup(init: T.(ButtonGroup) -> Unit): ButtonGroup {
+    val group = ButtonGroup()
+    init(group)
+    return group
+}
+
+fun <T : Container, V> T.comboBox(adding: Boolean = true, init: JComboBox<V>.() -> Unit): JComboBox<V> {
+    val comp = JComboBox<V>()
+    if (adding) {
+        add(comp)
+    }
+    comp.init()
+    return comp
+}
+
+fun <T : Container> T.textField(adding: Boolean = true, init: JTextField.() -> Unit): JTextField {
+    val comp = JTextField()
+    if (adding) {
+        add(comp)
+    }
+    comp.init()
+    return comp
+}
+
+fun <T : Container> T.textArea(adding: Boolean = true, init: JTextArea.() -> Unit): JTextArea {
+    val comp = JTextArea()
+    if (adding) {
+        add(comp)
+    }
+    comp.init()
+    return comp
 }
 
 var Container.north: Component
@@ -123,3 +176,5 @@ var <T : JSplitPane> T.belowComponent: Component
 fun <T : AbstractButton> T.actionListener(block: (ActionEvent) -> Unit) {
     addActionListener(BlockActionListener(block))
 }
+
+operator fun Border.plus(border: Border): Border = CompoundBorder(border, this)
