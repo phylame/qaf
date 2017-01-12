@@ -36,6 +36,7 @@
         <module>qaf-core</module>
         <module>qaf-cli</module>
         <module>qaf-ixin</module>
+        <module>kotlin-swing</module>
     </modules>
 
     <dependencyManagement>
