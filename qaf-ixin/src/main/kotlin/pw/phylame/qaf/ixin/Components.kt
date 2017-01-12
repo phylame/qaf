@@ -18,7 +18,7 @@
 
 package pw.phylame.qaf.ixin
 
-import pw.phylame.ycl.util.Provider
+import pw.phylame.ycl.function.Provider
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -34,17 +34,16 @@ fun mnemonicLabel(text: String): JLabel {
     return label
 }
 
-
-fun <T : Component> T.performOn(form: IForm, provider: Provider<String>): T {
-    addMouseListener(StatusPerformer(provider, form))
-    return this
-}
-
 fun <T : Component> T.performOn(form: IForm, text: String): T = performOn(form, Provider { text })
 
 fun <T : Component> T.performOn(form: IForm, action: Action): T = performOn(form, Provider {
     action[Action.LONG_DESCRIPTION] ?: ""
 })
+
+fun <T : Component> T.performOn(form: IForm, provider: Provider<String>): T {
+    addMouseListener(StatusPerformer(provider, form))
+    return this
+}
 
 fun Component.labelled(text: String): JLabel {
     val label = mnemonicLabel(text)
@@ -137,7 +136,7 @@ fun groupedPane(rows: Int, columns: Int, hSpace: Int, vSpace: Int, vararg compon
 }
 
 fun addGroupedComponents(panel: JPanel, rows: Int, columns: Int, hSpace: Int, vSpace: Int, vararg components: Component?) {
-    if (components.size == 0) {
+    if (components.isEmpty()) {
         return
     }
 

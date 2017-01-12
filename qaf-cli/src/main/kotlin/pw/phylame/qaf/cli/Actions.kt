@@ -34,10 +34,10 @@ abstract class SubCommand(val error: String = "no command found") : Command {
             App.error(error)
             return -1
         }
-        return onCommand(delegate.inputs.first(), delegate.inputs.slice(1..delegate.inputs.size - 1))
+        return onCommand(delegate, delegate.inputs.first(), delegate.inputs.slice(1..delegate.inputs.size - 1))
     }
 
-    protected abstract fun onCommand(name: String, args: List<String>): Int
+    protected abstract fun onCommand(delegate: CLIDelegate, name: String, args: List<String>): Int
 }
 
 interface Initializer : Action {
@@ -62,19 +62,13 @@ interface ValueFetcher<T : Any> : Initializer {
 
     val validator: ((T) -> Boolean)?
 
-    fun parse(value: String): T? = null
+    fun parse(value: String): T?
 }
 
-open class TypedFetcher<T : Any>(override val option: String,
-                                 val clazz: Class<T>,
+open class TypedFetcher<T : Any>(override val option: String, val type: Class<T>,
                                  override val validator: ((T) -> Boolean)? = null) : ValueFetcher<T> {
-    override fun parse(value: String): T? = Converters.parse(value, clazz)
+    override fun parse(value: String): T? = Converters.parse(value, type)
 }
-
-inline fun <reified T : Any> fetcherOf(option: String): TypedFetcher<T> = TypedFetcher(option, T::class.java)
-
-fun <T : Any> fetcherOf(option: String, clazz: Class<T>, validator: ((T) -> Boolean)? = null): TypedFetcher<T> =
-        TypedFetcher(option, clazz, validator)
 
 abstract class SingleInitializer(val option: String) : Initializer {
     private var performed = false
@@ -107,3 +101,5 @@ open class Switcher(val option: String) : Initializer {
         delegate.context[option] = true
     }
 }
+
+inline fun <reified T : Any> fetcherOf(option: String): TypedFetcher<T> = TypedFetcher(option, T::class.java)

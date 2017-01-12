@@ -19,26 +19,44 @@
 package pw.phylame.qaf.core
 
 import pw.phylame.ycl.util.MiscUtils
+import pw.phylame.ycl.util.StringUtils
 import java.text.MessageFormat
 import java.util.*
 
 data class Assembly(val name: String = "", val version: String = "")
 
 interface Localizable {
-    @Throws(MissingResourceException::class)
     fun get(key: String): String
 
-    fun getOr(key: String, default: String? = null): String? = try {
-        get(key).let { if (it.isNotEmpty()) it else default }
+    fun tr(key: String): String = if (key.startsWith('!')) key else get(key)
+
+    fun optTr(key: String, default: String): String = try {
+        StringUtils.notEmptyOr(tr(key), default)
     } catch (e: MissingResourceException) {
         default
     }
 
-    fun tr(key: String): String = get(key)
+    fun tr(key: String, vararg args: Any?): String = format(if (key.startsWith('!')) key else tr(key), args)
 
-    fun tr(key: String, vararg args: Any?): String = format(get(key), args)
+    fun optTr(key: String, default: String, vararg args: Any?): String = format(optTr(key, default), args)
 
     fun format(pattern: String, args: Array<out Any?>): String = MessageFormat.format(pattern, *args)
+}
+
+open class LocalizableWrapper : Localizable {
+    lateinit var translator: Localizable
+
+    override fun get(key: String): String = translator.get(key)
+
+    override fun tr(key: String): String = translator.tr(key)
+
+    override fun optTr(key: String, default: String): String = translator.optTr(key, default)
+
+    override fun tr(key: String, vararg args: Any?): String = translator.tr(key, *args)
+
+    override fun optTr(key: String, default: String, vararg args: Any?): String = translator.optTr(key, default, *args)
+
+    override fun format(pattern: String, args: Array<out Any?>): String = translator.format(pattern, args)
 }
 
 class Translator private constructor(val bundle: ResourceBundle) : Localizable {

@@ -34,10 +34,7 @@ enum class Style {
     PLAIN, RADIO, CHECK, TOGGLE;
 }
 
-open class Item(val id: String,
-                val enable: Boolean = true,
-                val selected: Boolean = false,
-                val style: Style = Style.PLAIN) {
+open class Item(val id: String, val enable: Boolean = true, val selected: Boolean = false, val style: Style = Style.PLAIN) {
     init {
         require(id.isNotEmpty()) { "id of action cannot be empty" }
     }

@@ -81,14 +81,8 @@ abstract class IDelegate<F : IForm> : AppDelegate, CommandListener {
     private val plugins = LinkedHashSet<IPlugin>()
 }
 
-fun iconFor(name: String, suffix: String = ""): Icon? = Ixin.delegate.resource.iconFor(name, suffix)
+fun iconFor(name: String, suffix: String = ""): Icon? = Ixin.delegate.resource.iconFor(tr(name), suffix)
 
-fun localizedIconFor(id: String, suffix: String = ""): Icon? = Ixin.delegate.resource.iconFor(tr(id), suffix)
+fun imageFor(name: String, suffix: String = ""): Image? = Ixin.delegate.resource.imageFor(tr(name), suffix)
 
-fun imageFor(name: String, suffix: String = ""): Image? = Ixin.delegate.resource.imageFor(name, suffix)
-
-fun localizedImageFor(id: String, suffix: String = ""): Image? = Ixin.delegate.resource.imageFor(tr(id), suffix)
-
-fun fileFor(name: String, suffix: String = ""): URL? = Ixin.delegate.resource.itemFor(name, suffix)
-
-fun localizedFileFor(id: String, suffix: String = ""): URL? = Ixin.delegate.resource.itemFor(tr(id), suffix)
+fun fileFor(name: String, suffix: String = ""): URL? = Ixin.delegate.resource.itemFor(tr(name), suffix)

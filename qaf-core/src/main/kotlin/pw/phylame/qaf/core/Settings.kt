@@ -29,23 +29,23 @@ open class Settings(name: String = "settings", loading: Boolean = true, autosync
     companion object {
         var encoding = "UTF-8"
 
+        var fileExtension = ".pref"
+
         var commentLabel = "#"
 
         var valueSeparator = "="
 
         var lineSeparator: String = System.lineSeparator()
-
-        var fileSuffix = ".pref"
     }
 
     private val settings = LinkedHashMap<String, String>()
 
-    var modified: Boolean = false
+    var isModified: Boolean = false
         private set
 
     var comment: String = ""
 
-    val path = App.pathOf(name + fileSuffix)
+    val path = App.pathOf(name + fileExtension)
 
     init {
         if (loading) {
@@ -63,34 +63,36 @@ open class Settings(name: String = "settings", loading: Boolean = true, autosync
      * The sub implementation cannot use its var and val for super init is not completed.
      */
     open fun reset() {
-        modified = true
+        isModified = true
     }
 
     fun sync(forcing: Boolean = false) {
         val file = File(path)
         if (!file.exists()) {
-            reset() // reset for default values
+            reset()
+            isModified = true
         }
-        if (modified || forcing) {
+        if (isModified || forcing) {
             val dir = file.parentFile
             if (!dir.exists() && !dir.mkdir()) {
                 throw IOException("Cannot create settings home: ${dir.absolutePath}")
             }
             FileOutputStream(file).use { store(it) }
-            modified = false
+            isModified = false
         }
     }
 
     protected open fun load(input: InputStream) {
-        input.bufferedReader(Charset.forName(encoding)).forEachLine {
-            val line = it.trim()
-            if (line.isNotEmpty() && !line.startsWith(commentLabel)) {
-                val pos = line.indexOf(valueSeparator)
-                if (pos > -1) {
-                    settings[line.substring(0, pos).trim()] = line.substring(pos + valueSeparator.length)
+        input.bufferedReader(Charset.forName(encoding))
+                .lineSequence()
+                .map(String::trim)
+                .filter { it.isNotEmpty() && !it.startsWith(commentLabel) }
+                .forEach {
+                    val pos = it.indexOf(valueSeparator)
+                    if (pos > -1) {
+                        settings[it.substring(0, pos).trim()] = it.substring(pos + valueSeparator.length)
+                    }
                 }
-            }
-        }
     }
 
     protected open fun store(output: OutputStream) {
@@ -124,18 +126,17 @@ open class Settings(name: String = "settings", loading: Boolean = true, autosync
 
     inline operator fun <reified T : Any> get(name: String): T? = get(name, null as T?, T::class.java)
 
-    @Suppress("unchecked_cast")
-    fun <T : Any> get(name: String, default: T?, clazz: Class<T>): T? = settings[name]?.let {
-        Converters.parse(it, clazz)
+    fun <T : Any> get(name: String, default: T?, type: Class<T>): T? = settings[name]?.let {
+        Converters.parse(it, type)
     } ?: default
 
     inline operator fun <reified T : Any> set(name: String, value: T) {
         set(name, value, T::class.java)
     }
 
-    fun <T : Any> set(name: String, value: T, clazz: Class<T>) {
-        settings[name] = Converters.render(value, clazz) ?: throw IllegalArgumentException("Unsupported value type: $clazz")
-        modified = true
+    fun <T : Any> set(name: String, value: T, type: Class<T>) {
+        settings[name] = Converters.render(value, type) ?: throw IllegalArgumentException("Unsupported value type: $type")
+        isModified = true
     }
 
     fun update(rhs: Settings, clearing: Boolean = false) {
@@ -147,29 +148,28 @@ open class Settings(name: String = "settings", loading: Boolean = true, autosync
             clear()
         }
         settings.putAll(map)
-        modified = true
+        isModified = true
     }
 
     fun remove(name: String): String? {
         val prev = settings.remove(name)
-        modified = true
+        isModified = true
         return prev
     }
 
     fun clear() {
         settings.clear()
-        modified = true
+        isModified = true
     }
 
-    inline fun <reified T : Any> delegated(default: T, name: String? = null): Delegate<T> =
-            Delegate(default, T::class.java, name)
+    inline fun <reified T : Any> delegated(default: T, name: String? = null): Delegate<T> = Delegate(default, T::class.java, name)
 
-    inner class Delegate<T : Any>(val default: T, val clazz: Class<T>, val name: String? = null) {
+    inner class Delegate<T : Any>(val default: T, val type: Class<T>, val name: String? = null) {
 
-        operator fun getValue(ref: Any?, property: KProperty<*>): T = get(name ?: property.name, default, clazz)!!
+        operator fun getValue(ref: Any?, property: KProperty<*>): T = get(name ?: property.name, default, type)!!
 
         operator fun setValue(ref: Any?, property: KProperty<*>, value: T) {
-            set(name ?: property.name, value, clazz)
+            set(name ?: property.name, value, type)
         }
     }
 }

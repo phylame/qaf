@@ -24,35 +24,9 @@ import java.io.File
 import java.io.InputStream
 import java.util.*
 
-
 const val PLUGIN_CONFIG_KEY = "qaf.config.path"
 const val DEFAULT_CONFIG_PATH = "META-INF/qaf/plugin.prop"
 const val CUSTOMIZED_HOME_KEY = "qaf.home.path"
-
-/**
- * The delegate for app workflow, when creating the delegate instance, the methods of App is inaccessible.
- */
-interface AppDelegate : Runnable {
-    /**
-     * Does initialing tasks for the app.
-     */
-    fun onStart() {
-
-    }
-
-    /**
-     * Filters the specified plugin.
-     */
-    fun onPlugin(plugin: Plugin): Boolean = true
-
-    /**
-     * Does tasks when quitting app.
-     */
-    fun onQuit() {
-        App.plugins.values.forEach(Plugin::destroy)
-        App.cleanups.forEach { it.run() }
-    }
-}
 
 interface Plugin {
     val id: String
@@ -84,12 +58,41 @@ abstract class AbstractPlugin(private val metadata: Metadata) : Plugin {
     override fun toString(): String = "${javaClass.simpleName}[id=$id, meta=$meta]"
 }
 
-object App : Localizable {
-    private const val TAG = "APP"
+/**
+ * The delegate for app workflow, when creating the delegate instance, the methods of App is inaccessible.
+ */
+interface AppDelegate : Runnable {
+    /**
+     * Does initialing tasks for the app.
+     */
+    fun onStart() {
 
-    val plugins: MutableMap<String, Plugin> = LinkedHashMap()
+    }
 
-    val cleanups: MutableSet<Runnable> = LinkedHashSet()
+    /**
+     * Filters the specified plugin.
+     */
+    fun onPlugin(plugin: Plugin): Boolean = true
+
+    /**
+     * Does tasks when quitting app.
+     */
+    fun onQuit() {
+        App.plugins.values.forEach(Plugin::destroy)
+        App.cleanups.forEach(Runnable::run)
+    }
+}
+
+enum class DebugLevel {
+    NONE, ECHO, TRACE
+}
+
+object App : LocalizableWrapper() {
+    private const val TAG = "App"
+
+    val plugins = LinkedHashMap<String, Plugin>()
+
+    val cleanups = LinkedHashSet<Runnable>()
 
     lateinit var assembly: Assembly
         private set
@@ -100,10 +103,8 @@ object App : Localizable {
     lateinit var arguments: Array<String>
         private set
 
-    lateinit var translator: Localizable
-
     val home: String by lazy {
-        (System.getProperty(CUSTOMIZED_HOME_KEY, System.getProperty("user.home"))) + File.separatorChar + '.' + assembly.name
+        (System.getProperty(CUSTOMIZED_HOME_KEY) ?: System.getProperty("user.home")) + File.separatorChar + '.' + assembly.name
     }
 
     fun ensureHomeExisted() {
@@ -114,7 +115,7 @@ object App : Localizable {
     }
 
     fun loadPlugins(blacklist: Set<String> = emptySet(), loader: ClassLoader? = null) {
-        IOUtils.resourcesFor(System.getProperty(PLUGIN_CONFIG_KEY, DEFAULT_CONFIG_PATH), loader).asSequence().forEach {
+        IOUtils.resourcesFor(System.getProperty(PLUGIN_CONFIG_KEY, DEFAULT_CONFIG_PATH), loader).forEach {
             it.openStream().buffered().use {
                 loadPlugin(it, blacklist, loader)
             }
@@ -122,48 +123,36 @@ object App : Localizable {
     }
 
     fun loadPlugin(input: InputStream, blacklist: Set<String> = emptySet(), loader: ClassLoader? = null) {
-        for (line in input.bufferedReader().lineSequence()) {
-            val path = line.trim()
-            if (path.isBlank() || path.startsWith('#') || path in blacklist) {
-                continue
-            }
-            try {
-                val clazz = loader?.loadClass(path) ?: Class.forName(path)
-                if (Plugin::class.java.isAssignableFrom(clazz)) {
-                    val plugin = clazz.newInstance() as Plugin
-                    if (delegate.onPlugin(plugin)) {
-                        plugin.init()
-                        plugins[plugin.id] = plugin
+        input.bufferedReader()
+                .lineSequence()
+                .map(String::trim)
+                .filter { it.isNotBlank() && !it.startsWith('#') && it !in blacklist }
+                .forEach { path ->
+                    try {
+                        val clazz = loader?.loadClass(path) ?: Class.forName(path)
+                        if (Plugin::class.java.isAssignableFrom(clazz)) {
+                            val plugin = clazz.newInstance() as Plugin
+                            if (delegate.onPlugin(plugin)) {
+                                plugin.init()
+                                plugins[plugin.id] = plugin
+                            }
+                        } else {
+                            Log.e(TAG, "class $path is not instance of ${Plugin::class.java.name}")
+                        }
+                    } catch (e: ClassNotFoundException) {
+                        Log.e(TAG, "not found plugin in \"$path\"")
+                    } catch (e: Throwable) {
+                        Log.e(TAG, e)
                     }
                 }
-            } catch (e: ClassNotFoundException) {
-                Log.e(TAG, "not found plugin in \"$path\"")
-            } catch (e: Throwable) {
-                error("failed to load plugin: $path", e)
-                Log.e(TAG, e)
-            }
-        }
     }
 
     fun pathOf(name: String): String = home + File.separatorChar + name
 
+    var debugLevel = DebugLevel.ECHO
+
     fun echo(msg: Any) {
         System.out.println("${assembly.name}: $msg")
-    }
-
-    enum class Debug {
-        NONE, ECHO, TRACE
-    }
-
-    var debug = Debug.ECHO
-
-    private fun traceback(e: Throwable, debug: Debug) {
-        when (debug) {
-            Debug.ECHO -> println(e.message)
-            Debug.TRACE -> e.printStackTrace()
-            else -> {
-            }
-        }
     }
 
     fun error(msg: Any) {
@@ -171,12 +160,12 @@ object App : Localizable {
     }
 
     fun error(msg: Any, e: Throwable) {
-        error(msg, e, debug)
+        error(msg, e, debugLevel)
     }
 
-    fun error(msg: Any, e: Throwable, debug: Debug) {
+    fun error(msg: Any, e: Throwable, level: DebugLevel) {
         error(msg)
-        traceback(e, debug)
+        traceback(e, level)
     }
 
     fun die(msg: Any): Nothing {
@@ -185,19 +174,27 @@ object App : Localizable {
     }
 
     fun die(msg: Any, e: Throwable): Nothing {
-        die(msg, e, debug)
+        die(msg, e, debugLevel)
     }
 
-    fun die(msg: Any, e: Throwable, debug: Debug): Nothing {
+    fun die(msg: Any, e: Throwable, level: DebugLevel): Nothing {
         error(msg)
-        traceback(e, debug)
+        traceback(e, level)
         exit(-1)
     }
 
-    fun run(name: String, version: String, arguments: Array<String>, delegate: AppDelegate) {
+    private fun traceback(e: Throwable, level: DebugLevel) {
+        when (level) {
+            DebugLevel.ECHO -> System.out.println("  ${e.message}")
+            DebugLevel.TRACE -> e.printStackTrace()
+            else -> Unit
+        }
+    }
+
+    fun run(name: String, version: String, delegate: AppDelegate, arguments: Array<String>) {
         this.assembly = Assembly(name, version)
-        this.arguments = arguments
         this.delegate = delegate
+        this.arguments = arguments
         start()
     }
 
@@ -212,10 +209,12 @@ object App : Localizable {
         delegate.onStart()
         delegate.run()
     }
-
-    override fun get(key: String): String = translator.get(key)
 }
 
 fun tr(key: String): String = App.tr(key)
 
+fun optTr(key: String, default: String): String = App.optTr(key, default)
+
 fun tr(key: String, vararg args: Any?): String = App.tr(key, *args)
+
+fun optTr(key: String, default: String, vararg args: Any?): String = App.optTr(key, default, *args)

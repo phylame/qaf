@@ -99,7 +99,7 @@ open class IForm(title: String = "", val snap: Settings? = null) : JFrame(title)
             toolbar.isTextHidden = snap[TOOL_BAR_TEXT_HIDDEN] ?: true
         }
         statusBar?.isVisible = snap[STATUS_BAR_VISIBLE] ?: true
-        val point: Point? = snap[FORM_LOCATION] ?: null
+        val point: Point? = snap[FORM_LOCATION]
         if (point != null) {
             location = point
         }
@@ -158,7 +158,7 @@ open class IForm(title: String = "", val snap: Settings? = null) : JFrame(title)
         const val STATUS_BAR_VISIBLE = "form.statusbar.visible"
 
         val defaultSize by lazy {
-            Toolkit.getDefaultToolkit().screenSize.scaleWith(0.6)
+            Toolkit.getDefaultToolkit().screenSize.scale(0.6)
         }
     }
 }

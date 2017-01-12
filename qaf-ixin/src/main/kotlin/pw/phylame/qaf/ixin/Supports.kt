@@ -31,12 +31,14 @@ import java.awt.Point
 import java.util.*
 import javax.swing.*
 
-fun Dimension.scaleWith(rate: Double): Dimension = Dimension((width * rate).toInt(), (height * rate).toInt())
+infix fun Int.x(height: Int): Dimension = Dimension(this, height)
+
+fun Dimension.scale(rate: Double): Dimension = Dimension((width * rate).toInt(), (height * rate).toInt())
 
 object Ixin {
-    const val DEFAULT_THEME = "Default"
-    const val SYSTEM_THEME = "System"
     const val JAVA_THEME = "Java"
+    const val SYSTEM_THEME = "System"
+    const val DEFAULT_THEME = "Default"
     const val FONTS_KEY_PATH = "!pw/phylame/qaf/ixin/font-keys.txt"
     const val MNEMONIC_PREFIX = '&'
 
@@ -62,7 +64,6 @@ object Ixin {
         else -> name
     }
 
-    @Suppress("unchecked_cast")
     val delegate: IDelegate<*> get() = if (App.delegate is IDelegate<*>)
         App.delegate as IDelegate<*>
     else throw IllegalStateException("App should run with IDelegate")
@@ -103,7 +104,7 @@ object Ixin {
             try {
                 UIManager.setLookAndFeel(themeFor(name))
             } catch (e: Exception) {
-                throw RuntimeException("cannot set to new laf: $name", e)
+                throw RuntimeException("Cannot set to new laf: $name", e)
             }
         } else {
             Log.d("Ixin", "empty laf theme specified")

@@ -18,35 +18,10 @@
 
 package pw.phylame.qaf.core
 
+import pw.phylame.ycl.util.Exceptions
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.net.URL
-import java.nio.charset.Charset
-import java.util.*
-import kotlin.reflect.KProperty
-
-fun <K, V> MutableMap<K, V>.put(pair: Pair<K, V>): V? = put(pair.first, pair.second)
-
-fun <K, V> MutableMap<K, V>.put(entry: Map.Entry<K, V>): V? = put(entry.key, entry.value)
 
 fun <T> T.iif(cond: Boolean, ok: (T) -> T): T = if (cond) ok(this) else this
 
-fun Throwable.dumpToString(): String {
-    val sw = StringWriter()
-    printStackTrace(PrintWriter(sw))
-    return sw.toString()
-}
-
-class Delegate<out T>(val m: Map<String, *>, val name: String? = null, val fallback: () -> T) {
-    @Suppress("unchecked_cast")
-    operator fun getValue(ref: kotlin.Any?, property: KProperty<*>): T = m[name ?: property.name] as? T ?: fallback()
-}
-
-fun <T> valueOf(m: Map<String, Any>, name: String? = null, fallback: () -> T): Delegate<T> = Delegate(m, name, fallback)
-
-fun URL.lines(charset: Charset = Charsets.UTF_8): Sequence<String> = openStream().bufferedReader(charset).use {
-    it.lineSequence().filter {
-        val line = it.trim()
-        line.isNotEmpty() && line.startsWith("#")
-    }
-}
+fun Throwable.dump(): String = Exceptions.dumpToString(this)

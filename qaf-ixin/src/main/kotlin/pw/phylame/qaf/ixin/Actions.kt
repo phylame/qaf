@@ -40,9 +40,7 @@ var Action.isSelected: Boolean get() = getValue(Action.SELECTED_KEY) as? Boolean
         putValue(Action.SELECTED_KEY, value)
     }
 
-abstract class IAction(id: String,
-                       translator: Localizable = App,
-                       resource: Resource = Ixin.delegate.resource) : AbstractAction() {
+abstract class IAction(id: String, translator: Localizable = App, resource: Resource = Ixin.delegate.resource) : AbstractAction() {
     companion object {
         const val SELECTED_ICON_KEY = "IxinSelectedIcon"
 
@@ -64,8 +62,8 @@ abstract class IAction(id: String,
         putValue(Action.ACTION_COMMAND_KEY, id)
 
         // name and mnemonic
-        var text = translator.getOr(id)
-        if (text != null) {
+        var text = translator.optTr(id, "")
+        if (text.isNotEmpty()) {
             val result = Ixin.mnemonicOf(text)
             putValue(Action.NAME, result.name)
             if (result.isEnable) {
@@ -75,32 +73,32 @@ abstract class IAction(id: String,
         }
 
         // scope
-        text = translator.getOr(id + scopeSuffix)
-        if (text != null) {
+        text = translator.optTr(id + scopeSuffix, "")
+        if (text.isNotEmpty()) {
             putValue(SCOPE_KEY, text)
         }
 
         // icons
-        val path = translator.getOr(id + normalIconSuffix) ?: iconPrefix + id + iconSuffix
+        val path = translator.optTr(id + normalIconSuffix, "") ?: iconPrefix + id + iconSuffix
         putValue(Action.SMALL_ICON, resource.iconFor(path))
         putValue(Action.LARGE_ICON_KEY, resource.iconFor(path, showyIconSuffix))
         putValue(SELECTED_ICON_KEY, resource.iconFor(path, selectedIconSuffix))
 
         // menu accelerator
-        text = translator.getOr(id + shortcutKeySuffix)
-        if (text != null) {
+        text = translator.optTr(id + shortcutKeySuffix, "")
+        if (text.isNotEmpty()) {
             putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(text))
         }
 
         // tip
-        text = translator.getOr(id + tipTextSuffix)
-        if (text != null) {
+        text = translator.optTr(id + tipTextSuffix, "")
+        if (text.isNotEmpty()) {
             putValue(Action.SHORT_DESCRIPTION, text)
         }
 
         // details
-        text = translator.getOr(id + detailsTextSuffix)
-        if (text != null) {
+        text = translator.optTr(id + detailsTextSuffix, "")
+        if (text.isNotEmpty()) {
             putValue(Action.LONG_DESCRIPTION, text)
         }
     }

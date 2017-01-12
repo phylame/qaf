@@ -55,9 +55,10 @@ class Resource(dir: String,
         Toolkit.getDefaultToolkit().getImage(it)
     }
 
-    fun translatorFor(name: String, locale: Locale = Locale.getDefault()): Translator =
-            Translator((if (baseDir.startsWith(IOUtils.CLASS_PATH_PREFIX)) baseDir.substring(1) else baseDir)
-                    + i18nDir + '/' + name, locale, loader)
+    fun translatorFor(name: String, locale: Locale = Locale.getDefault()): Translator {
+        val base = if (baseDir.startsWith(IOUtils.CLASS_PATH_PREFIX)) baseDir.substring(1) else baseDir
+        return Translator("$base$i18nDir/$name", locale, loader)
+    }
 
     fun itemFor(name: String, suffix: String = ""): URL? = IOUtils.resourceFor(baseDir + normalize(name, suffix), loader)
 
@@ -66,6 +67,8 @@ class Resource(dir: String,
         if (index == -1) name + suffix else name.substring(0, index) + suffix + name.substring(index)
     }
 
-    private val icons = HashMap<String, Icon>()
-    private val images = HashMap<String, Image>()
+    companion object {
+        private val icons = HashMap<String, Icon>()
+        private val images = HashMap<String, Image>()
+    }
 }
