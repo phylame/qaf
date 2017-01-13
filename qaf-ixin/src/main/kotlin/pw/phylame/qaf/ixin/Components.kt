@@ -25,12 +25,8 @@ import java.awt.event.MouseEvent
 import javax.swing.*
 
 fun mnemonicLabel(text: String): JLabel {
-    val result = Ixin.mnemonicOf(text)
-    val label = JLabel(result.name)
-    if (result.isEnable) {
-        label.displayedMnemonic = result.mnemonic
-        label.displayedMnemonicIndex = result.index
-    }
+    val label = JLabel()
+    label.title = text
     return label
 }
 
@@ -58,6 +54,26 @@ val Component?.window: Window get() = if (this == null) {
 } else {
     parent.window
 }
+
+var JLabel.title: String get() = text
+    set(value) {
+        val result = Ixin.mnemonicOf(value)
+        text = result.name
+        if (result.isEnable) {
+            displayedMnemonic = result.mnemonic
+            displayedMnemonicIndex = result.index
+        }
+    }
+
+var AbstractButton.title: String get() = text
+    set(value) {
+        val result = Ixin.mnemonicOf(value)
+        text = result.name
+        if (result.isEnable) {
+            mnemonic = result.mnemonic
+            displayedMnemonicIndex = result.index
+        }
+    }
 
 var JToolBar.isLocked: Boolean get() = !isFloatable
     set(value) {

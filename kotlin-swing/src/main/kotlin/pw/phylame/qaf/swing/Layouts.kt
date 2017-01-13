@@ -2,6 +2,7 @@ package pw.phylame.qaf.swing
 
 import java.awt.*
 import javax.swing.BoxLayout
+import javax.swing.GroupLayout
 import javax.swing.SpringLayout
 
 fun <T : Container> T.flowLayout(align: Int = FlowLayout.CENTER, hgap: Int = 5, vgap: Int = 5, init: T.(FlowLayout) -> Unit): FlowLayout {
@@ -39,8 +40,15 @@ fun <T : Container> T.gridBagLayout(init: T.(GridBagLayout) -> Unit): GridBagLay
     return layout
 }
 
-fun <T : Container> T.boxLayout(axis: Int, init: T.(BoxLayout) -> Unit): BoxLayout {
+fun <T : Container> T.boxLayout(axis: Int = BoxLayout.LINE_AXIS, init: T.(BoxLayout) -> Unit): BoxLayout {
     val layout = BoxLayout(this, axis)
+    this.layout = layout
+    init(layout)
+    return layout
+}
+
+fun <T : Container> T.groupLayout(init: T.(GroupLayout) -> Unit): GroupLayout {
+    val layout = GroupLayout(this)
     this.layout = layout
     init(layout)
     return layout

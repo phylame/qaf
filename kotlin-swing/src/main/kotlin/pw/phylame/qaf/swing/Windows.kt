@@ -16,16 +16,20 @@ fun dialog(init: JDialog.() -> Unit): JDialog {
     return dialog
 }
 
-fun <T : JFrame> T.menuBar(init: JMenuBar.() -> Unit): JMenuBar {
+fun <T : JFrame> T.menuBar(adding: Boolean = true, init: JMenuBar.() -> Unit): JMenuBar {
     val menuBar = JMenuBar()
-    jMenuBar = menuBar
+    if (adding) {
+        jMenuBar = menuBar
+    }
     menuBar.init()
     return menuBar
 }
 
-fun <T : JDialog> T.menuBar(init: JMenuBar.() -> Unit): JMenuBar {
+fun <T : JDialog> T.menuBar(adding: Boolean = true, init: JMenuBar.() -> Unit): JMenuBar {
     val menuBar = JMenuBar()
-    jMenuBar = menuBar
+    if (adding) {
+        jMenuBar = menuBar
+    }
     menuBar.init()
     return menuBar
 }
