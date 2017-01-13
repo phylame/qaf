@@ -40,7 +40,7 @@ fun <T : Container> T.gridBagLayout(init: T.(GridBagLayout) -> Unit): GridBagLay
     return layout
 }
 
-fun <T : Container> T.boxLayout(axis: Int, init: T.(BoxLayout) -> Unit): BoxLayout {
+fun <T : Container> T.boxLayout(axis: Int = BoxLayout.LINE_AXIS, init: T.(BoxLayout) -> Unit): BoxLayout {
     val layout = BoxLayout(this, axis)
     this.layout = layout
     init(layout)

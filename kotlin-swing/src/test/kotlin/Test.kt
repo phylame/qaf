@@ -1,4 +1,6 @@
 import pw.phylame.qaf.ixin.Ixin
+import pw.phylame.qaf.ixin.title
+import pw.phylame.qaf.ixin.x
 import pw.phylame.qaf.swing.*
 import java.awt.Font
 import java.awt.event.WindowAdapter
@@ -6,10 +8,11 @@ import java.awt.event.WindowEvent
 import javax.swing.*
 
 fun main(args: Array<String>) {
-    Ixin.init(true, false, "Nimbus", Font("Microsoft YaHei UI", Font.PLAIN, 14))
+    Ixin.init(true, false, "Nimbus", Font("Consolas", Font.PLAIN, 16))
     val frame = frame {
-        title = "This is a pw.phylame.qaf.swing.frame"
         size = 800 x 450
+        title = "This is a pw.phylame.qaf.swing.frame"
+        setLocationRelativeTo(null)
 
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent?) {
@@ -19,7 +22,7 @@ fun main(args: Array<String>) {
 
         menuBar {
             menu {
-                text = "File"
+                title = "&File"
 
                 item {
                     text = "New"
@@ -38,7 +41,7 @@ fun main(args: Array<String>) {
                 item {
                     text = "Exit"
 
-                    actionListener {
+                    addActionListener {
                         System.exit(0)
                     }
                 }
@@ -53,7 +56,51 @@ fun main(args: Array<String>) {
                 item {
                     text = "Paste"
                 }
+
+                separator()
+
+                menu {
+                    text = "Find"
+
+                    item {
+                        text = "Find"
+                    }
+
+                    item {
+                        text = "Search"
+                    }
+                }
             }
+
+            menu {
+                title = "&View"
+
+                radio {
+                    text = "Haha"
+                }
+
+                check {
+                    text = "Check"
+                }
+
+                separator()
+
+                buttonGroup {
+                    radio {
+                        text = "10 pt"
+                    }
+
+                    radio {
+                        text = "15 pt"
+                        isSelected = true
+                    }
+
+                    radio {
+                        text = "20 pt"
+                    }
+                }
+            }
+
             menu {
                 text = "Help"
 
@@ -69,6 +116,9 @@ fun main(args: Array<String>) {
 
         borderLayout {
             north = toolBar(false) {
+                isRollover = true
+                isFloatable = false
+
                 button {
                     text = "New"
                 }
@@ -80,17 +130,51 @@ fun main(args: Array<String>) {
                 button {
                     text = "Save"
                 }
-            }
-            center = panel(false) {
-                border = BorderFactory.createEtchedBorder()
 
+                separator()
+
+                buttonGroup {
+                    radioButton {
+                        title = "&One"
+                        it.add(this)
+                    }
+
+                    radioButton {
+                        title = "&Two"
+                        it.add(this)
+                    }
+
+                    radioButton {
+                        title = "T&hree"
+                        it.add(this)
+                    }
+                }
+
+                separator()
+
+                radioButton {
+                    title = "&Another"
+                }
+
+                separator()
+
+                textField {
+                    columns = 16
+                    toolTipText = "Go To"
+                }
+
+                button {
+                    text = "Go"
+                }
+            }
+            center = pane(false) {
                 borderLayout {
                     center = splitPane(false) {
-                        leftComponent = panel(false) {
+                        leftComponent = pane(false) {
                             borderLayout {
-                                north = panel(false) {
+                                north = pane(false) {
                                     borderLayout {
-                                        west = label {
+                                        west = label(false) {
                                             text = "Contents"
                                             icon = ImageIcon(javaClass.getResource("/info.png"))
                                         }
@@ -98,6 +182,7 @@ fun main(args: Array<String>) {
                                         east = toolBar(false) {
                                             isRollover = true
                                             isFloatable = false
+                                            isBorderPainted = false
 
                                             button {
                                                 icon = ImageIcon(javaClass.getResource("/info.png"))
@@ -109,37 +194,62 @@ fun main(args: Array<String>) {
                                         }
                                     }
                                 }
+
                                 center = scrollPane(false) {
-                                    setViewportView(JTree())
+                                    content = JTree().apply {
+
+                                    }
                                 }
                             }
                         }
 
                         rightComponent = tabbedPane(false) {
-                            addTab("One", panel(false) {
-                                borderLayout {
-                                    center = JTextArea()
+                            tab("Environments") {
+                                scrollPane(false) {
+                                    textArea {
+                                        lineWrap = true
+                                        wrapStyleWord = true
+                                        text = System.getenv()
+                                                .entries
+                                                .joinToString("\n", "System Environments:\n----------------\n") {
+                                                    "%32s: %s".format(it.key, it.value)
+                                                }
+                                    }
                                 }
-                            })
+                            }
 
-                            addTab("Two", panel(false) {
-                                borderLayout {
-                                    center = JTable()
-                                }
-                            })
+                            tab("Two") {
+                                JTable()
+                            }
 
-                            addTab("Three", panel(false) {
-                                borderLayout {
-                                    center = JTextArea()
+                            tab("Properties") {
+                                scrollPane(false) {
+                                    textArea {
+                                        lineWrap = true
+                                        wrapStyleWord = true
+                                        text = System.getProperties()
+                                                .entries
+                                                .joinToString("\n", "System Properties:\n----------------\n") {
+                                                    "%32s: %s".format(it.key, it.value)
+                                                }
+                                    }
                                 }
-                            })
+                            }
+
+                            tab("Label") {
+                                label(false) {
+                                    verticalAlignment = SwingConstants.TOP
+                                    horizontalAlignment = SwingConstants.CENTER
+                                    text = "This is a label"
+                                }
+                            }
                         }
                     }
                 }
             }
-            south = panel(false) {
-                border = BorderFactory.createEmptyBorder(2, 2, 2, 2)
+            south = pane(false) {
                 borderLayout {
+                    north = JSeparator()
                     west = label(false) {
                         text = "Ready"
                     }
