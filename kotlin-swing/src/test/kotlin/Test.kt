@@ -8,7 +8,7 @@ import java.awt.event.WindowEvent
 import javax.swing.*
 
 fun main(args: Array<String>) {
-    Ixin.init(true, false, "Nimbus", Font("Consolas", Font.PLAIN, 16))
+    Ixin.init(true, false, "Nimbus", Font("Segoe UI", Font.PLAIN, 16))
     val frame = frame {
         size = 800 x 450
         title = "This is a pw.phylame.qaf.swing.frame"
@@ -219,7 +219,11 @@ fun main(args: Array<String>) {
                             }
 
                             tab("Two") {
-                                JTable()
+                                pane(false) {
+                                    groupLayout {
+
+                                    }
+                                }
                             }
 
                             tab("Properties") {

@@ -89,13 +89,13 @@ var JToolBar.isTextHidden: Boolean get() = components.any { it is AbstractButton
         }
     }
 
-fun alignedPane(alignment: Int, space: Int, vararg components: Component?): JPanel? = if (components.isEmpty()) {
+fun alignedPane(alignment: Int, space: Int, vararg components: Component): JPanel? = if (components.isEmpty()) {
     null
 } else {
     alignedPane(alignment, BoxLayout.LINE_AXIS, space, *components)
 }
 
-fun alignedPane(alignment: Int, axis: Int, space: Int, vararg components: Component?): JPanel? {
+fun alignedPane(alignment: Int, axis: Int, space: Int, vararg components: Component): JPanel? {
     if (components.isEmpty()) {
         return null
     }
@@ -105,7 +105,11 @@ fun alignedPane(alignment: Int, axis: Int, space: Int, vararg components: Compon
 }
 
 // alignment: -1 for customizing
-fun addAlignedComponents(panel: JPanel, alignment: Int, axis: Int, space: Int, vararg components: Component?) {
+fun addAlignedComponents(panel: JPanel,
+                         alignment: Int,
+                         axis: Int,
+                         space: Int,
+                         vararg components: Component) {
     if (components.isEmpty()) {
         return
     }
@@ -122,7 +126,7 @@ fun addAlignedComponents(panel: JPanel, alignment: Int, axis: Int, space: Int, v
         }
     }
 
-    val rigid = if (hAxis) Dimension(space, 0) else Dimension(0, space)
+    val rigid = if (hAxis) space x 0 else 0 x space
 
     val end = components.size - 1
     for (ix in 0..end - 1) {

@@ -137,7 +137,7 @@ object Ixin {
                 is Font -> font.deriveFont(value.style)
                 is UIDefaults.ActiveValue -> font.deriveFont((value.createValue(defaults) as Font).style)
                 is UIDefaults.LazyValue -> font.deriveFont((value.createValue(defaults) as Font).style)
-                else -> throw RuntimeException("unknown value for key $key")
+                else -> throw RuntimeException("unknown name for key $key")
             }
         }
     }

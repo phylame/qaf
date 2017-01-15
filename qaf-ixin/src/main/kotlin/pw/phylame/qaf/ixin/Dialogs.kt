@@ -115,7 +115,7 @@ abstract class ICommonDialog : JDialog {
     }
 }
 
-// dialog with value returned
+// dialog with name returned
 abstract class IResultfulDialog<R> : ICommonDialog {
     abstract val result: R?
 

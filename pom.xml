@@ -29,7 +29,7 @@
     <properties>
         <ycl.version>1.1.0</ycl.version>
         <log4j.version>2.6.1</log4j.version>
-		<kotlin.version>1.0.6</kotlin.version>
+        <kotlin.version>1.0.6</kotlin.version>
         <commons.cli.version>1.3.1</commons.cli.version>
     </properties>
 

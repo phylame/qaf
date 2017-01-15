@@ -35,12 +35,14 @@ operator fun <T : Any> Action.set(name: String, value: T?) {
     putValue(name, value)
 }
 
-var Action.isSelected: Boolean get() = getValue(Action.SELECTED_KEY) as? Boolean ?: false
+var Action.isSelected: Boolean get() = getValue(Action.SELECTED_KEY) == true
     set(value) {
         putValue(Action.SELECTED_KEY, value)
     }
 
-abstract class IAction(id: String, translator: Localizable = App, resource: Resource = Ixin.delegate.resource) : AbstractAction() {
+abstract class IAction(id: String,
+                       translator: Localizable = App,
+                       resource: Resource = Ixin.delegate.resource) : AbstractAction() {
     companion object {
         const val SELECTED_ICON_KEY = "IxinSelectedIcon"
 
@@ -112,6 +114,10 @@ class IgnoredAction(id: String,
     }
 }
 
+interface CommandListener {
+    fun performed(command: String)
+}
+
 class DispatcherAction(id: String,
                        val listener: CommandListener,
                        translator: Localizable = App,
@@ -121,16 +127,12 @@ class DispatcherAction(id: String,
     }
 }
 
-annotation class Command(val value: String = "")
-
-interface CommandListener {
-    fun performed(command: String)
-}
+annotation class Command(val name: String = "")
 
 /**
  * Dispatches command to the proxy object.
  */
-open class CommandDispatcher(proxies: Array<Any>) : CommandListener {
+open class CommandDispatcher(proxies: Array<out Any>) : CommandListener {
     private val invocations = HashMap<String, Invocation>()
 
     init {
@@ -148,7 +150,7 @@ open class CommandDispatcher(proxies: Array<Any>) : CommandListener {
         }.forEach {
             val command = it.getAnnotation(Command::class.java)
             if (command != null) {
-                invocations.put(if (command.value.isNotEmpty()) command.value else it.name, Invocation(proxy, it))
+                invocations.put(if (command.name.isNotEmpty()) command.name else it.name, Invocation(proxy, it))
             }
         }
     }
