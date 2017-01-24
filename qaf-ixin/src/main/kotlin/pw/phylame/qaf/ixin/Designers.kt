@@ -24,7 +24,7 @@ import org.json.JSONObject
 import org.json.JSONTokener
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Localizable
-import pw.phylame.ycl.log.Log
+import pw.phylame.commons.log.Log
 import java.awt.Component
 import java.io.InputStream
 import java.util.*

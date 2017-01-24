@@ -18,8 +18,8 @@
 
 package pw.phylame.qaf.core
 
-import pw.phylame.ycl.io.IOUtils
-import pw.phylame.ycl.log.Log
+import pw.phylame.commons.io.IOUtils
+import pw.phylame.commons.log.Log
 import java.io.File
 import java.io.InputStream
 import java.util.*

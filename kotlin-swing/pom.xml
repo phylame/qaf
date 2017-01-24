@@ -25,10 +25,6 @@
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
-            <groupId>pw.phylame.util</groupId>
-            <artifactId>ycl</artifactId>
-        </dependency>
-        <dependency>
             <groupId>pw.phylame.qaf</groupId>
             <artifactId>qaf-ixin</artifactId>
             <version>${project.version}</version>

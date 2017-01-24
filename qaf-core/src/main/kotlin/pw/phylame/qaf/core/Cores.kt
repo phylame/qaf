@@ -18,8 +18,8 @@
 
 package pw.phylame.qaf.core
 
-import pw.phylame.ycl.util.MiscUtils
-import pw.phylame.ycl.util.StringUtils
+import pw.phylame.commons.util.MiscUtils
+import pw.phylame.commons.util.StringUtils
 import java.text.MessageFormat
 import java.util.*
 

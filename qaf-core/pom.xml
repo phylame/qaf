@@ -22,7 +22,7 @@
         </dependency>
         <dependency>
             <groupId>pw.phylame.util</groupId>
-            <artifactId>ycl</artifactId>
+            <artifactId>commons</artifactId>
         </dependency>
     </dependencies>
 </project>

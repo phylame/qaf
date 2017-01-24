@@ -18,8 +18,8 @@
 
 package pw.phylame.qaf.core
 
-import pw.phylame.ycl.format.Converters
-import pw.phylame.ycl.util.DateUtils
+import pw.phylame.commons.format.Converters
+import pw.phylame.commons.util.DateUtils
 import java.io.*
 import java.nio.charset.Charset
 import java.util.*

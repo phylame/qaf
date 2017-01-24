@@ -18,7 +18,7 @@
 
 package pw.phylame.qaf.core
 
-import pw.phylame.ycl.util.Exceptions
+import pw.phylame.commons.util.Exceptions
 import kotlin.reflect.KProperty
 
 fun <T> T.iif(cond: Boolean, ok: (T) -> T): T = if (cond) ok(this) else this

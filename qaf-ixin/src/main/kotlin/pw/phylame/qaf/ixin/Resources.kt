@@ -20,7 +20,7 @@ package pw.phylame.qaf.ixin
 
 import pw.phylame.qaf.core.Translator
 import pw.phylame.qaf.core.iif
-import pw.phylame.ycl.io.IOUtils
+import pw.phylame.commons.io.IOUtils
 import java.awt.Image
 import java.awt.Toolkit
 import java.net.URL

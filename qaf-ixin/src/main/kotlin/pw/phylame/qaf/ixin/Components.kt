@@ -18,7 +18,7 @@
 
 package pw.phylame.qaf.ixin
 
-import pw.phylame.ycl.function.Provider
+import pw.phylame.commons.function.Provider
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
