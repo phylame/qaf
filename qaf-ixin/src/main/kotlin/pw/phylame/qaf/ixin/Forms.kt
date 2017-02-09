@@ -18,6 +18,7 @@
 
 package pw.phylame.qaf.ixin
 
+import pw.phylame.commons.log.Log
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Localizable
 import pw.phylame.qaf.core.Settings
@@ -60,6 +61,8 @@ class IStatusBar : JPanel(BorderLayout()) {
 
 open class IForm(title: String = "", val snap: Settings? = null) : JFrame(title) {
     val actions = HashMap<String, Action>()
+
+    val menus = HashMap<String, JMenu>()
 
     var toolBar: JToolBar? = null
 
@@ -119,20 +122,24 @@ open class IForm(title: String = "", val snap: Settings? = null) : JFrame(title)
         snap[STATUS_BAR_VISIBLE] = statusBar?.isVisible ?: true
     }
 
-    fun createPopupMenu(items: Array<Item>, label: String = ""): JPopupMenu =
-            JPopupMenu(label).addItems(items, actions, Ixin.delegate, form = this)
+    fun popupMenu(label: String, vararg items: Item) = JPopupMenu(label).addItems(items, actions, Ixin.delegate, form = this)
 
     operator fun Action.unaryPlus() {
         val cmd: String? = this[Action.ACTION_COMMAND_KEY]
         if (cmd != null) {
             actions[cmd] = this
+        } else {
+            Log.d("Forms", "action without command")
         }
     }
 
     private fun createMenuBar(menus: Array<Group>, listener: CommandListener, translator: Localizable, resource: Resource) {
         val menuBar = JMenuBar()
-        for (menu in menus) {
-            menuBar.add(menu.asMenu(translator, resource).addItems(menu.items, actions, listener, translator, resource, this))
+        for (model in menus) {
+            val menu = model.asMenu(translator, resource)
+                    .addItems(model.items, actions, listener, translator, resource, this)
+            this.menus[model.id] = menu
+            menuBar.add(menu)
         }
         if (menuBar.menuCount > 0) {
             jMenuBar = menuBar

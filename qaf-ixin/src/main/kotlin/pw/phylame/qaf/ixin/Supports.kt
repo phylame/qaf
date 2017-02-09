@@ -18,22 +18,27 @@
 
 package pw.phylame.qaf.ixin
 
-import pw.phylame.qaf.core.App
 import pw.phylame.commons.format.Converter
 import pw.phylame.commons.format.Converters
 import pw.phylame.commons.io.IOUtils
 import pw.phylame.commons.log.Log
 import pw.phylame.commons.util.StringUtils
+import pw.phylame.qaf.core.App
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.Point
+import java.awt.event.MouseEvent
 import java.util.*
 import javax.swing.*
 
 infix fun Int.x(height: Int): Dimension = Dimension(this, height)
 
 fun Dimension.scale(rate: Double): Dimension = Dimension((width * rate).toInt(), (height * rate).toInt())
+
+val MouseEvent.isLeft: Boolean get() = SwingUtilities.isLeftMouseButton(this)
+
+val MouseEvent.isRight: Boolean get() = SwingUtilities.isRightMouseButton(this)
 
 object Ixin {
     const val JAVA_THEME = "Java"

@@ -26,9 +26,13 @@ import java.util.*
 data class Assembly(val name: String = "", val version: String = "")
 
 interface Localizable {
+    companion object {
+        const val RAW_LABEL = ':'
+    }
+
     fun get(key: String): String
 
-    fun tr(key: String): String = if (key.startsWith('!')) key.substring(1) else get(key)
+    fun tr(key: String): String = if (key.startsWith(RAW_LABEL)) key.substring(1) else get(key)
 
     fun optTr(key: String, default: String): String = try {
         StringUtils.notEmptyOr(tr(key), default)
@@ -36,7 +40,7 @@ interface Localizable {
         default
     }
 
-    fun tr(key: String, vararg args: Any?): String = format(if (key.startsWith('!')) key.substring(1) else tr(key), args)
+    fun tr(key: String, vararg args: Any?): String = format(if (key.startsWith(RAW_LABEL)) key.substring(1) else tr(key), args)
 
     fun optTr(key: String, default: String, vararg args: Any?): String = format(optTr(key, default), args)
 

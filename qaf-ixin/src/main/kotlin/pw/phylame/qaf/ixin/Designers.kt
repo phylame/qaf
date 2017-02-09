@@ -22,9 +22,9 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import org.json.JSONTokener
+import pw.phylame.commons.log.Log
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Localizable
-import pw.phylame.commons.log.Log
 import java.awt.Component
 import java.io.InputStream
 import java.util.*
@@ -204,7 +204,12 @@ fun <T : JPopupMenu> T.addItems(items: Array<out Item>,
     for (item in items) {
         val comp: JComponent = when (item) {
             Separator -> JPopupMenu.Separator()
-            is Group -> item.asMenu(translator, resource).addItems(item.items, actions, listener, translator, resource, form)
+            is Group -> {
+                val menu = item.asMenu(translator, resource)
+                        .addItems(item.items, actions, listener, translator, resource, form)
+                form?.menus?.set(item.id, menu)
+                menu
+            }
             else -> {
                 val result = actions.actionFor(item, listener, translator, resource).asMenuItem(item.style, form)
                 if (item.style == Style.RADIO) {
