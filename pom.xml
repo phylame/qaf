@@ -7,7 +7,7 @@
     <parent>
         <groupId>pw.phylame.util</groupId>
         <artifactId>my-project</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>
 
     <groupId>pw.phylame.qaf</groupId>
@@ -29,7 +29,7 @@
     <properties>
         <commons.version>1.1.0</commons.version>
         <log4j.version>2.6.1</log4j.version>
-        <kotlin.version>1.1.1</kotlin.version>
+        <kotlin.version>1.1.2</kotlin.version>
         <commons.cli.version>1.4</commons.cli.version>
     </properties>
 
