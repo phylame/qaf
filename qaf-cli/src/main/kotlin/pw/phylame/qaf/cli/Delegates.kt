@@ -25,11 +25,11 @@ import pw.phylame.qaf.core.MapGetter
 import java.util.*
 
 open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDelegate {
-    val context = HashMap<String, Any>()
-
     val options = Options()
 
     var defaultCommand: Command? = null
+
+    val context = HashMap<String, Any>()
 
     fun <T> managed(name: String = "", fallback: () -> T): MapGetter<T> = MapGetter(context, name, fallback)
 

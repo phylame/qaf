@@ -7,12 +7,12 @@
     <parent>
         <groupId>pw.phylame.qaf</groupId>
         <artifactId>qaf-project</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>qaf-cli</artifactId>
     <name>Qaf CLI</name>
+    <artifactId>qaf-cli</artifactId>
     <description>Qaf console application framework</description>
 
     <dependencies>

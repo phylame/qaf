@@ -21,7 +21,6 @@ package pw.phylame.qaf.ixin
 import pw.phylame.commons.log.Log
 import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.Localizable
-import pw.phylame.qaf.core.Settings
 import java.awt.BorderLayout
 import java.awt.Point
 import java.awt.Toolkit

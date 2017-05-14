@@ -7,12 +7,12 @@
     <parent>
         <groupId>pw.phylame.qaf</groupId>
         <artifactId>qaf-project</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>qaf-ixin</artifactId>
     <name>Qaf IxIn</name>
+    <artifactId>qaf-ixin</artifactId>
     <description>Fast GUI framework on Swing</description>
 
     <properties>
