@@ -36,8 +36,7 @@ open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDel
     lateinit var inputs: Array<String>
         private set
 
-    protected open fun createOptions() {
-    }
+    protected open fun createOptions() {}
 
     fun addOption(option: Option, action: Action) {
         actions[option.opt] = action
@@ -86,8 +85,8 @@ open class CLIDelegate(val parser: CommandLineParser = DefaultParser()) : AppDel
     private fun dispatchCommands(): Int {
         var status = 0
         if (commands.isNotEmpty()) {
-            commands.forEach {
-                status = Math.min(status, it.execute(this))
+            for (cmd in commands) {
+                status = Math.min(status, cmd.execute(this))
             }
         } else if (defaultCommand != null) {
             status = defaultCommand!!.execute(this)

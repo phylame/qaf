@@ -44,6 +44,10 @@ enum class Verbose {
     NONE, ECHO, TRACE
 }
 
+enum class State {
+    STARTING, RUNNING, STOPPING, STOPPED
+}
+
 object App : LocalizableWrapper() {
     lateinit var assembly: Assembly
         private set
@@ -54,13 +58,23 @@ object App : LocalizableWrapper() {
     lateinit var arguments: Array<String>
         private set
 
-    internal var isInitialized: Boolean = false
+    val cleanups = LinkedHashSet<Runnable>()
+
+    var code: Int = 0
         private set
 
-    val cleanups = LinkedHashSet<Runnable>()
+    var state = State.STARTING
+        private set
 
     val home by lazy {
         System.getProperty(HOME_PATH_KEY) or "${System.getProperty("user.home")}/.${assembly.name}"
+    }
+
+    fun ensureHomeExists() {
+        val dir = File(home)
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw RuntimeException(optTr("qaf.err.createHome", "Cannot create home directory: {0}", dir))
+        }
     }
 
     fun pathOf(name: String) = "$home/$name"
@@ -68,18 +82,23 @@ object App : LocalizableWrapper() {
     fun fileOf(name: String) = File(pathOf(name))
 
     fun run(name: String, version: String, delegate: AppDelegate, arguments: Array<String>) {
+        state = State.STARTING
         this.assembly = Assembly(name, version)
         this.arguments = arguments
         this.delegate = delegate
-        isInitialized = true
         delegate.onStart()
+        state = State.RUNNING
         delegate.run()
+        exit(0)
     }
 
     fun exit(status: Int = 0): Nothing {
+        code = status
+        state = State.STOPPING
         delegate.onQuit()
+        state = State.STOPPED
         System.exit(status)
-        throw RuntimeException()
+        throw InternalError()
     }
 
     var verbose = Verbose.ECHO

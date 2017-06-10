@@ -18,6 +18,25 @@
 
 package test
 
-fun main(args: Array<String>) {
+import pw.phylame.qaf.core.App
+import pw.phylame.qaf.core.AppDelegate
 
+object MyDelegate : AppDelegate {
+    override fun onStart() {
+        super.onStart()
+        println("app is initializing")
+    }
+
+    override fun run() {
+        App.echo("app is running")
+    }
+
+    override fun onQuit() {
+        super.onQuit()
+        println("app is stopping")
+    }
+}
+
+fun main(args: Array<String>) {
+    App.run("demo", "1.0", MyDelegate, args)
 }
