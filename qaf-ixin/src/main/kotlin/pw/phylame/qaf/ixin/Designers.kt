@@ -120,12 +120,12 @@ open class JSONDesigner(input: InputStream) : Designer {
                 _menus.add(Group(id, items.toTypedArray()))
             }
         } catch (e: JSONException) {
-            Log.d(TAG, e)
+            Log.d(TAG, "bad designer file", e)
         }
         try {
             parseItems(json.getJSONArray(TOOLBAR_KEY), _toolbar)
         } catch (e: JSONException) {
-            Log.d(TAG, e)
+            Log.d(TAG, "bad designer file", e)
         }
     }
 

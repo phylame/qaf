@@ -18,10 +18,10 @@
 
 package pw.phylame.qaf.ixin
 
-import pw.phylame.commons.format.Converter
-import pw.phylame.commons.format.Converters
 import pw.phylame.commons.io.IOUtils
 import pw.phylame.commons.log.Log
+import pw.phylame.commons.text.Converter
+import pw.phylame.commons.text.ConverterManager
 import pw.phylame.commons.util.StringUtils
 import pw.phylame.qaf.core.App
 import java.awt.Color
@@ -191,7 +191,7 @@ object Ixin {
         }
 
         // register converter for UI objects
-        Converters.register(Point::class.java, object : Converter<Point> {
+        ConverterManager.registerConverter(Point::class.java, object : Converter<Point> {
             override fun parse(str: String): Point {
                 val pair = StringUtils.partition(str, "-")
                 return Point(Integer.decode(pair.first.trim()), Integer.decode(pair.second.trim()))
@@ -200,7 +200,7 @@ object Ixin {
             override fun render(o: Point): String = "${o.x}-${o.y}"
         })
 
-        Converters.register(Dimension::class.java, object : Converter<Dimension> {
+        ConverterManager.registerConverter(Dimension::class.java, object : Converter<Dimension> {
             override fun parse(str: String): Dimension {
                 val pair = StringUtils.partition(str, "-")
                 return Dimension(Integer.decode(pair.first.trim()), Integer.decode(pair.second.trim()))
@@ -209,7 +209,7 @@ object Ixin {
             override fun render(o: Dimension): String = "${o.width}-${o.height}"
         })
 
-        Converters.register(Font::class.java, object : Converter<Font> {
+        ConverterManager.registerConverter(Font::class.java, object : Converter<Font> {
             override fun parse(str: String): Font = Font.decode(str)
 
             override fun render(o: Font): String {
@@ -224,7 +224,7 @@ object Ixin {
             }
         })
 
-        Converters.register(Color::class.java, object : Converter<Color> {
+        ConverterManager.registerConverter(Color::class.java, object : Converter<Color> {
             override fun parse(str: String): Color = Color.decode(str)
 
             override fun render(o: Color): String = "#%X".format(o.rgb).substring(2)

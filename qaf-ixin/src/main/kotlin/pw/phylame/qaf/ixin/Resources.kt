@@ -18,9 +18,8 @@
 
 package pw.phylame.qaf.ixin
 
-import pw.phylame.qaf.core.Translator
-import pw.phylame.qaf.core.iif
 import pw.phylame.commons.io.IOUtils
+import pw.phylame.qaf.core.Translator
 import java.awt.Image
 import java.awt.Toolkit
 import java.net.URL
@@ -62,7 +61,7 @@ class Resource(dir: String,
 
     fun itemFor(name: String, suffix: String = ""): URL? = IOUtils.resourceFor(baseDir + normalize(name, suffix), loader)
 
-    fun normalize(name: String, suffix: String = ""): String = name.iif(suffix.isNotEmpty()) {
+    fun normalize(name: String, suffix: String = ""): String = if (suffix.isEmpty()) name else {
         val index = name.indexOf('.')
         if (index == -1) name + suffix else name.substring(0, index) + suffix + name.substring(index)
     }

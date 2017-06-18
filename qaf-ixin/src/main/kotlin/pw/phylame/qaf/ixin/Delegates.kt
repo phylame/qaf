@@ -18,9 +18,9 @@
 
 package pw.phylame.qaf.ixin
 
+import pw.phylame.qaf.core.App
 import pw.phylame.qaf.core.AppDelegate
 import pw.phylame.qaf.core.Plugin
-import pw.phylame.qaf.core.tr
 import java.awt.Image
 import java.net.URL
 import java.util.*
@@ -81,8 +81,8 @@ abstract class IDelegate<F : IForm> : AppDelegate, CommandListener {
     private val plugins = LinkedHashSet<IPlugin>()
 }
 
-fun iconFor(name: String, suffix: String = ""): Icon? = Ixin.delegate.resource.iconFor(tr(name), suffix)
+fun iconFor(name: String, suffix: String = ""): Icon? = Ixin.delegate.resource.iconFor(App.tr(name), suffix)
 
-fun imageFor(name: String, suffix: String = ""): Image? = Ixin.delegate.resource.imageFor(tr(name), suffix)
+fun imageFor(name: String, suffix: String = ""): Image? = Ixin.delegate.resource.imageFor(App.tr(name), suffix)
 
-fun fileFor(name: String, suffix: String = ""): URL? = Ixin.delegate.resource.itemFor(tr(name), suffix)
+fun fileFor(name: String, suffix: String = ""): URL? = Ixin.delegate.resource.itemFor(App.tr(name), suffix)
