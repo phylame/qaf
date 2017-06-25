@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kotlin-swing" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/qaf-cli" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/qaf-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/qaf-ixin" charset="UTF-8" />
+  </component>
+</project>

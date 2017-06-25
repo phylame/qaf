@@ -1,11 +1,14 @@
-import pw.phylame.qaf.ixin.Ixin
-import pw.phylame.qaf.ixin.title
-import pw.phylame.qaf.ixin.x
-import pw.phylame.qaf.swing.*
+import qaf.ixin.Ixin
+import qaf.ixin.title
+import qaf.ixin.x
+import qaf.swing.*
 import java.awt.Font
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import javax.swing.*
+import javax.swing.ImageIcon
+import javax.swing.JSeparator
+import javax.swing.JTree
+import javax.swing.SwingConstants
 
 fun main(args: Array<String>) {
     Ixin.init(true, false, "Nimbus", Font("Segoe UI", Font.PLAIN, 16))

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/kotlin-swing/kotlin-swing.iml" filepath="$PROJECT_DIR$/kotlin-swing/kotlin-swing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/qaf-cli/qaf-cli.iml" filepath="$PROJECT_DIR$/qaf-cli/qaf-cli.iml" />
+      <module fileurl="file://$PROJECT_DIR$/qaf-core/qaf-core.iml" filepath="$PROJECT_DIR$/qaf-core/qaf-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/qaf-ixin/qaf-ixin.iml" filepath="$PROJECT_DIR$/qaf-ixin/qaf-ixin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/qaf-project.iml" filepath="$PROJECT_DIR$/qaf-project.iml" />
+    </modules>
+  </component>
+</project>

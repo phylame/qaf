@@ -17,10 +17,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-        </dependency>
-        <dependency>
             <groupId>pw.phylame.qaf</groupId>
             <artifactId>qaf-ixin</artifactId>
             <version>${project.version}</version>

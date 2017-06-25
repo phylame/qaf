@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="kotlin-swing" />
+        <module name="qaf-cli" />
+        <module name="qaf-core" />
+        <module name="qaf-ixin" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="kotlin-swing" target="1.7" />
+      <module name="qaf-cli" target="1.7" />
+      <module name="qaf-core" target="1.7" />
+      <module name="qaf-ixin" target="1.7" />
+      <module name="qaf-project" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

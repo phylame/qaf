@@ -1,5 +1,5 @@
-import pw.phylame.qaf.ixin.addAlignedComponents
-import pw.phylame.qaf.ixin.x
+import qaf.ixin.addAlignedComponents
+import qaf.ixin.x
 import java.awt.Component
 import javax.swing.*
 
