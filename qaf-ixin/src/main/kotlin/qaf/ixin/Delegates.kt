@@ -18,7 +18,6 @@
 
 package qaf.ixin
 
-import qaf.core.App
 import qaf.core.AppDelegate
 import qaf.core.Plugin
 import java.awt.Image
@@ -81,8 +80,8 @@ abstract class IDelegate<F : IForm> : AppDelegate, CommandListener {
     private val plugins = LinkedHashSet<IPlugin>()
 }
 
-fun iconFor(name: String, suffix: String = ""): Icon? = Ixin.delegate.resource.iconFor(App.tr(name), suffix)
+fun iconFor(name: String, suffix: String = ""): Icon? = Ixin.delegate.resource.iconFor(name, suffix)
 
-fun imageFor(name: String, suffix: String = ""): Image? = Ixin.delegate.resource.imageFor(App.tr(name), suffix)
+fun imageFor(name: String, suffix: String = ""): Image? = Ixin.delegate.resource.imageFor(name, suffix)
 
-fun fileFor(name: String, suffix: String = ""): URL? = Ixin.delegate.resource.itemFor(App.tr(name), suffix)
+fun fileFor(name: String, suffix: String = ""): URL? = Ixin.delegate.resource.itemFor(name, suffix)

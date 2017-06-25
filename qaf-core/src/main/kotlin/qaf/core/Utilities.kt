@@ -147,7 +147,7 @@ open class Settings(name: String = "settings", loading: Boolean = true, autosync
     }
 
     fun <T : Any> set(name: String, value: T, type: Class<T>) {
-        values[name] = Converters.render(value, type) ?: throw IllegalArgumentException("Unsupported value type: $type")
+        values[name] = Converters.render(value, type, true) ?: throw IllegalArgumentException("Unsupported value type: $type")
         isModified = true
     }
 

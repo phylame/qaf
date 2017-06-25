@@ -139,7 +139,6 @@ object App : LocalizableWrapper() {
         delegate.onStart()
         state = State.RUNNING
         delegate.run()
-        exit(0)
     }
 
     fun exit(status: Int = 0): Nothing {
