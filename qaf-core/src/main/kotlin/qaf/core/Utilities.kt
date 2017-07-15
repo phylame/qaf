@@ -30,14 +30,15 @@ operator fun Localizable.get(key: String): String = tr(key)
 
 infix fun <T : CharSequence> T?.or(default: T): T = if (isNullOrEmpty()) default else this!!
 
-data class Assembly(val name: String, val version: String, val description: String = "")
-
 open class MapGetter<out T>(val m: Map<String, *>, val name: String = "", val default: () -> T) {
-    fun keyOf(property: KProperty<*>) = if (name.isNotEmpty()) name else property.name
 
+    fun keyOf(property: KProperty<*>) = if (name.isNotEmpty()) name else property.name
     @Suppress("UNCHECKED_CAST")
     operator fun getValue(ref: Any, property: KProperty<*>): T = m[keyOf(property)] as? T ?: default()
+
 }
+
+data class Assembly(val name: String, val version: String, val description: String = "")
 
 open class Settings(name: String = "settings", loading: Boolean = true, autosync: Boolean = true) {
     companion object {
